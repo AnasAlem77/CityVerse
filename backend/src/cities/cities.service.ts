@@ -1,12 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateCityDto } from './dto/create-city.dto';
+import { UpdateCityDto } from './dto/update-city.dto';
 
 @Injectable()
 export class CitiesService {
+
   constructor(
     private readonly prisma: PrismaService,
   ) {}
+
 
   async createCity(data: CreateCityDto) {
     return this.prisma.city.create({
@@ -19,13 +22,6 @@ export class CitiesService {
     });
   }
 
-  async getCityById(id: string) {
-    return this.prisma.city.findUnique({
-      where: {
-        id,
-      },
-    });
-  }
 
   async getCities() {
     return this.prisma.city.findMany({
@@ -34,4 +30,36 @@ export class CitiesService {
       },
     });
   }
+
+
+  async getCityById(id: string) {
+    return this.prisma.city.findUnique({
+      where: {
+        id,
+      },
+    });
+  }
+
+
+  async updateCity(
+    id: string,
+    data: UpdateCityDto,
+  ) {
+    return this.prisma.city.update({
+      where: {
+        id,
+      },
+      data,
+    });
+  }
+
+
+  async deleteCity(id: string) {
+    return this.prisma.city.delete({
+      where: {
+        id,
+      },
+    });
+  }
+
 }
