@@ -24,6 +24,7 @@ model User {
   updatedAt DateTime @updatedAt
 
   savedPlaces SavedPlace[]
+  reviews     Review[]
 }
 
 model City {
@@ -59,6 +60,8 @@ model Place {
   images PlaceImage[]
 
   savedPlaces SavedPlace[]
+
+  reviews Review[]
 }
 
 model PlaceImage {
@@ -77,6 +80,26 @@ model SavedPlace {
   id String @id @default(cuid())
 
   userId  String
+  placeId String
+
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  place Place @relation(fields: [placeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, placeId])
+}
+
+model Review {
+  id String @id @default(cuid())
+
+  rating Int
+
+  comment String
+
+  userId String
+
   placeId String
 
   createdAt DateTime @default(now())

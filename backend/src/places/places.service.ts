@@ -23,11 +23,6 @@ export class PlacesService {
 
         cityId: data.cityId,
       },
-
-      include: {
-        city: true,
-        images: true,
-      },
     });
 
   }
@@ -35,32 +30,125 @@ export class PlacesService {
 
   async getPlaces() {
 
-    return this.prisma.place.findMany({
+    const places = await this.prisma.place.findMany({
       orderBy: {
         name: 'asc',
       },
 
       include: {
         city: true,
+
         images: true,
+
+        reviews: {
+          select: {
+            rating: true,
+          },
+        },
       },
+    });
+
+
+    return places.map((place) => {
+
+      const reviewsCount = place.reviews.length;
+
+
+      const averageRating =
+        reviewsCount === 0
+          ? 0
+          :
+          place.reviews.reduce(
+            (sum, review) => sum + review.rating,
+            0,
+          ) / reviewsCount;
+
+
+      return {
+        ...place,
+
+        reviewsCount,
+
+        averageRating:
+          Number(averageRating.toFixed(1)),
+      };
+
     });
 
   }
 
 
+
   async getPlaceById(id: string) {
 
-    return this.prisma.place.findUnique({
+    const place = await this.prisma.place.findUnique({
+
       where: {
         id,
       },
 
+
       include: {
+
         city: true,
+
         images: true,
+
+        reviews: {
+
+          include: {
+
+            user: {
+
+              select: {
+
+                name: true,
+
+              },
+
+            },
+
+          },
+
+        },
+
       },
+
     });
+
+
+
+    if (!place) {
+      return null;
+    }
+
+
+
+    const reviewsCount = place.reviews.length;
+
+
+
+    const averageRating =
+      reviewsCount === 0
+        ? 0
+        :
+        place.reviews.reduce(
+          (sum, review) => sum + review.rating,
+          0,
+        ) / reviewsCount;
+
+
+
+    return {
+
+      ...place,
+
+      reviewsCount,
+
+      averageRating:
+        Number(averageRating.toFixed(1)),
+
+    };
 
   }
 
