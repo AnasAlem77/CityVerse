@@ -8,10 +8,12 @@ datasource db {
   provider = "postgresql"
 }
 
+
 enum UserRole {
   USER
   ADMIN
 }
+
 
 model User {
   id        String   @id @default(cuid())
@@ -19,46 +21,63 @@ model User {
   name      String
   password  String
   role      UserRole @default(USER)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   savedPlaces SavedPlace[]
 }
 
+
 model City {
   id        String   @id @default(cuid())
   name      String
   country   String
+
   latitude  Decimal  @db.Decimal(9, 6)
   longitude Decimal  @db.Decimal(9, 6)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   places Place[]
 }
 
+
 model Place {
-  id        String   @id @default(cuid())
-  name      String
-  category  String
-  latitude  Decimal  @db.Decimal(9, 6)
-  longitude Decimal  @db.Decimal(9, 6)
-  cityId    String
+  id          String   @id @default(cuid())
+
+  name        String
+  description String?
+  category    String
+
+  latitude    Decimal  @db.Decimal(9, 6)
+  longitude   Decimal  @db.Decimal(9, 6)
+
+  cityId      String
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  city        City         @relation(fields: [cityId], references: [id], onDelete: Cascade)
+
+city City @relation(fields: [cityId], references: [id], onDelete: Cascade)
+
   savedPlaces SavedPlace[]
 }
 
+
 model SavedPlace {
   id        String   @id @default(cuid())
+
   userId    String
   placeId   String
+
   createdAt DateTime @default(now())
 
-  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  place Place @relation(fields: [placeId], references: [id], onDelete: Cascade)
+
+user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+place Place @relation(fields: [placeId], references: [id], onDelete: Cascade)
 
   @@unique([userId, placeId])
 }
