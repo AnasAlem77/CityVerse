@@ -23,6 +23,11 @@ export class PlacesService {
 
         cityId: data.cityId,
       },
+
+      include: {
+        city: true,
+        images: true,
+      },
     });
 
   }
@@ -37,6 +42,7 @@ export class PlacesService {
 
       include: {
         city: true,
+        images: true,
       },
     });
 
@@ -52,6 +58,7 @@ export class PlacesService {
 
       include: {
         city: true,
+        images: true,
       },
     });
 
