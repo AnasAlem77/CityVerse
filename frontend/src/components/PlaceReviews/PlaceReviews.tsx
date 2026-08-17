@@ -21,6 +21,21 @@ type PlaceReviewsProps = {
   initialReviews: Review[];
 };
 
+function formatReviewDate(dateString: string) {
+  const date = new Date(dateString);
+
+  if (Number.isNaN(date.getTime())) {
+    return "Unknown date";
+  }
+
+  return new Intl.DateTimeFormat("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    timeZone: "UTC",
+  }).format(date);
+}
+
 export default function PlaceReviews({
   placeId,
   initialReviews,
@@ -121,9 +136,7 @@ export default function PlaceReviews({
 
 
                 <time className="text-xs text-slate-400">
-                  {new Date(
-                    review.createdAt,
-                  ).toLocaleDateString()}
+                  {formatReviewDate(review.createdAt)}
                 </time>
 
               </div>

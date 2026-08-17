@@ -1,8 +1,9 @@
 import Link from "next/link";
 import {
   ArrowLeft,
-  MapPin,
   ArrowRight,
+  MapPin,
+  Star,
 } from "lucide-react";
 
 const API_URL = "http://localhost:3001";
@@ -47,178 +48,439 @@ export default async function CityDetailsPage({
   const { id } = await params;
 
   const city = await getCity(id);
-
   const places = city.places ?? [];
 
   return (
-    <main className="min-h-screen bg-slate-50 dark:bg-slate-950">
-      <div className="mx-auto max-w-7xl px-5 py-10 sm:px-6 lg:px-8">
+    <main className="min-h-screen bg-[var(--background)]">
+      <div className="mx-auto max-w-7xl px-6 py-12 lg:px-8">
 
         {/* Back */}
         <Link
           href="/cities"
-          className="inline-flex items-center gap-2 text-sm font-medium text-slate-600 transition hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-400"
+          className="
+            inline-flex
+            items-center
+            gap-2
+            text-sm
+            font-semibold
+            text-[var(--muted)]
+            transition-all
+            duration-300
+            hover:gap-3
+            hover:text-orange-500
+          "
         >
           <ArrowLeft size={17} />
           Back to cities
         </Link>
 
+        {/* City Hero */}
+        <section
+          className="
+            mt-8
+            overflow-hidden
+            rounded-3xl
+            border
+            border-black/5
+            bg-[var(--card)]
+            shadow-sm
+            dark:border-white/10
+          "
+        >
+          {/* Visual */}
+          <div
+            className="
+              relative
+              flex
+              min-h-80
+              items-center
+              justify-center
+              overflow-hidden
+              bg-gradient-to-br
+              from-orange-100
+              via-emerald-100
+              to-slate-100
+              dark:from-orange-950
+              dark:via-emerald-950
+              dark:to-slate-950
+            "
+          >
+            <div
+              className="
+                absolute
+                -left-20
+                -top-20
+                h-64
+                w-64
+                rounded-full
+                bg-orange-400/20
+                blur-3xl
+              "
+            />
 
-        {/* City Header */}
-        <section className="mt-8 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <div
+              className="
+                absolute
+                -bottom-20
+                -right-20
+                h-64
+                w-64
+                rounded-full
+                bg-emerald-400/20
+                blur-3xl
+              "
+            />
 
-          <div className="flex min-h-72 items-center justify-center bg-gradient-to-br from-blue-100 via-slate-100 to-cyan-100 dark:from-blue-950 dark:via-slate-900 dark:to-cyan-950">
-            <span className="text-8xl">🌍</span>
+            <div
+              className="
+                relative
+                flex
+                h-28
+                w-28
+                items-center
+                justify-center
+                rounded-[2rem]
+                border
+                border-white/40
+                bg-white/60
+                text-orange-500
+                shadow-2xl
+                backdrop-blur-xl
+                dark:border-white/10
+                dark:bg-black/30
+              "
+            >
+              <MapPin size={52} strokeWidth={1.5} />
+            </div>
           </div>
 
-
-          <div className="p-6 sm:p-8">
-
-            <div className="flex items-center gap-2 text-sm font-medium text-blue-600 dark:text-blue-400">
+          {/* Information */}
+          <div className="p-7 sm:p-9">
+            <div className="flex items-center gap-2 text-sm font-bold text-orange-500">
               <MapPin size={16} />
               {city.country}
             </div>
 
-
-            <h1 className="mt-3 text-4xl font-bold tracking-tight text-slate-900 dark:text-white">
+            <h1
+              className="
+                mt-3
+                text-4xl
+                font-black
+                tracking-tight
+                text-[var(--foreground)]
+                sm:text-5xl
+              "
+            >
               {city.name}
             </h1>
 
-
-            <p className="mt-3 max-w-2xl text-slate-600 dark:text-slate-400">
+            <p className="mt-4 max-w-2xl text-base leading-7 text-[var(--muted)]">
               Discover amazing places and experiences in {city.name}.
+              Explore local destinations and find something worth
+              remembering.
             </p>
 
-
-            <div className="mt-6 grid gap-4 sm:grid-cols-2">
-
-              <div className="rounded-2xl bg-slate-50 p-4 dark:bg-slate-800/60">
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+            {/* Coordinates */}
+            <div className="mt-7 grid gap-4 sm:grid-cols-2">
+              <div
+                className="
+                  rounded-2xl
+                  border
+                  border-black/5
+                  bg-[var(--background)]
+                  p-5
+                  dark:border-white/10
+                "
+              >
+                <p className="text-xs font-bold uppercase tracking-[0.15em] text-[var(--muted)]">
                   Latitude
                 </p>
 
-                <p className="mt-1 font-medium text-slate-900 dark:text-white">
+                <p className="mt-2 text-lg font-bold text-[var(--foreground)]">
                   {city.latitude}
                 </p>
               </div>
 
-
-              <div className="rounded-2xl bg-slate-50 p-4 dark:bg-slate-800/60">
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+              <div
+                className="
+                  rounded-2xl
+                  border
+                  border-black/5
+                  bg-[var(--background)]
+                  p-5
+                  dark:border-white/10
+                "
+              >
+                <p className="text-xs font-bold uppercase tracking-[0.15em] text-[var(--muted)]">
                   Longitude
                 </p>
 
-                <p className="mt-1 font-medium text-slate-900 dark:text-white">
+                <p className="mt-2 text-lg font-bold text-[var(--foreground)]">
                   {city.longitude}
                 </p>
               </div>
-
             </div>
-
           </div>
-
         </section>
 
-
         {/* Places */}
-        <section className="mt-12">
-
-          <div className="mb-7 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-
+        <section className="mt-14">
+          <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="text-sm font-semibold uppercase tracking-wide text-blue-600 dark:text-blue-400">
+              <p className="text-sm font-bold uppercase tracking-[0.2em] text-orange-500">
                 Explore
               </p>
 
-              <h2 className="mt-1 text-2xl font-bold text-slate-900 dark:text-white">
+              <h2 className="mt-2 text-3xl font-black tracking-tight text-[var(--foreground)]">
                 Places in {city.name}
               </h2>
 
-              <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+              <p className="mt-3 text-[var(--muted)]">
                 Discover interesting places around the city.
               </p>
             </div>
 
-
-            <span className="text-sm font-medium text-slate-500 dark:text-slate-400">
+            <span className="text-sm font-semibold text-[var(--muted)]">
               {places.length}{" "}
               {places.length === 1 ? "place" : "places"}
             </span>
-
           </div>
 
-
           {places.length > 0 ? (
-
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-
+            <div className="grid gap-7 sm:grid-cols-2 lg:grid-cols-3">
               {places.map((place) => (
-
-                <article
+                <Link
                   key={place.id}
-                  className="group overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl dark:border-slate-800 dark:bg-slate-900"
+                  href={`/places/${place.id}`}
+                  className="
+                    group
+                    overflow-hidden
+                    rounded-3xl
+                    border
+                    border-black/5
+                    bg-[var(--card)]
+                    shadow-sm
+                    transition-all
+                    duration-500
+                    hover:-translate-y-2
+                    hover:shadow-2xl
+                    dark:border-white/10
+                  "
                 >
+                  {/* Place visual */}
+                  <div
+                    className="
+                      relative
+                      flex
+                      h-48
+                      items-center
+                      justify-center
+                      overflow-hidden
+                      bg-gradient-to-br
+                      from-orange-100
+                      via-emerald-100
+                      to-slate-100
+                      dark:from-orange-950
+                      dark:via-emerald-950
+                      dark:to-slate-950
+                    "
+                  >
+                    <div
+                      className="
+                        absolute
+                        -right-8
+                        -top-8
+                        h-28
+                        w-28
+                        rounded-full
+                        bg-orange-400/20
+                        blur-3xl
+                        transition-transform
+                        duration-700
+                        group-hover:scale-150
+                      "
+                    />
 
-                  <div className="flex h-48 items-center justify-center bg-gradient-to-br from-slate-100 to-blue-100 text-6xl dark:from-slate-800 dark:to-blue-950">
-                    📍
+                    <div
+                      className="
+                        absolute
+                        -bottom-8
+                        -left-8
+                        h-28
+                        w-28
+                        rounded-full
+                        bg-emerald-400/20
+                        blur-3xl
+                        transition-transform
+                        duration-700
+                        group-hover:scale-150
+                      "
+                    />
+
+                    <div
+                      className="
+                        relative
+                        flex
+                        h-16
+                        w-16
+                        items-center
+                        justify-center
+                        rounded-2xl
+                        border
+                        border-white/40
+                        bg-white/60
+                        text-orange-500
+                        shadow-xl
+                        backdrop-blur-xl
+                        transition-all
+                        duration-500
+                        group-hover:scale-110
+                        group-hover:rotate-3
+                        dark:border-white/10
+                        dark:bg-black/30
+                      "
+                    >
+                      <MapPin size={32} strokeWidth={1.7} />
+                    </div>
+
+                    {/* Category */}
+                    <span
+                      className="
+                        absolute
+                        bottom-4
+                        left-4
+                        rounded-full
+                        border
+                        border-white/40
+                        bg-white/80
+                        px-3
+                        py-1.5
+                        text-xs
+                        font-bold
+                        uppercase
+                        tracking-wider
+                        text-slate-800
+                        shadow-lg
+                        backdrop-blur-md
+                        dark:border-white/10
+                        dark:bg-black/40
+                        dark:text-white
+                      "
+                    >
+                      {place.category || "Place"}
+                    </span>
+
+                    {/* Rating */}
+                    {place.averageRating != null &&
+                      place.averageRating > 0 && (
+                        <span
+                          className="
+                            absolute
+                            right-4
+                            top-4
+                            flex
+                            items-center
+                            gap-1
+                            rounded-full
+                            bg-black/70
+                            px-3
+                            py-1.5
+                            text-xs
+                            font-bold
+                            text-white
+                            backdrop-blur-md
+                          "
+                        >
+                          <Star
+                            size={13}
+                            className="fill-yellow-400 text-yellow-400"
+                          />
+                          {Number(place.averageRating).toFixed(1)}
+                        </span>
+                      )}
                   </div>
 
-
+                  {/* Place information */}
                   <div className="p-6">
-
-                    <p className="text-sm font-semibold text-blue-600 dark:text-blue-400">
-                      {place.category}
+                    <p className="text-xs font-bold uppercase tracking-[0.15em] text-orange-500">
+                      {place.category || "Destination"}
                     </p>
 
-
-                    <h3 className="mt-2 text-xl font-bold text-slate-900 dark:text-white">
+                    <h3
+                      className="
+                        mt-2
+                        text-xl
+                        font-black
+                        tracking-tight
+                        text-[var(--foreground)]
+                        transition-colors
+                        duration-300
+                        group-hover:text-orange-500
+                      "
+                    >
                       {place.name}
                     </h3>
 
-
-                    <p className="mt-3 line-clamp-3 text-sm leading-6 text-slate-600 dark:text-slate-400">
+                    <p className="mt-3 line-clamp-3 text-sm leading-6 text-[var(--muted)]">
                       {place.description}
                     </p>
 
+                    <div className="mt-6 flex items-center justify-between">
+                      <span className="text-sm font-bold text-[var(--foreground)]">
+                        View place
+                      </span>
 
-                    <Link
-                      href={`/places/${place.id}`}
-                      className="mt-5 inline-flex items-center gap-2 font-semibold text-blue-600 transition group-hover:gap-3 dark:text-blue-400"
-                    >
-                      View Details
-                      <ArrowRight size={17} />
-                    </Link>
-
+                      <span
+                        className="
+                          flex
+                          h-9
+                          w-9
+                          items-center
+                          justify-center
+                          rounded-full
+                          bg-orange-500/10
+                          text-orange-500
+                          transition-all
+                          duration-500
+                          group-hover:translate-x-1
+                          group-hover:bg-orange-500
+                          group-hover:text-white
+                        "
+                      >
+                        <ArrowRight size={17} />
+                      </span>
+                    </div>
                   </div>
-
-                </article>
-
+                </Link>
               ))}
-
             </div>
-
           ) : (
-
-            <div className="rounded-3xl border border-dashed border-slate-300 bg-white p-12 text-center dark:border-slate-700 dark:bg-slate-900">
-
-              <div className="text-5xl">
-                📍
+            <div
+              className="
+                rounded-3xl
+                border
+                border-dashed
+                border-black/10
+                bg-[var(--card)]
+                p-12
+                text-center
+                dark:border-white/10
+              "
+            >
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-orange-500/10 text-orange-500">
+                <MapPin size={30} />
               </div>
 
-              <h3 className="mt-4 text-xl font-bold text-slate-900 dark:text-white">
+              <h3 className="mt-5 text-xl font-black text-[var(--foreground)]">
                 No places yet
               </h3>
 
-              <p className="mx-auto mt-2 max-w-md text-sm text-slate-500 dark:text-slate-400">
+              <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-[var(--muted)]">
                 There are currently no places registered for this city.
               </p>
-
             </div>
-
           )}
-
         </section>
-
       </div>
     </main>
   );

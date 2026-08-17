@@ -1,547 +1,613 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { FormEvent, useState } from "react";
 import {
   ArrowRight,
-  Compass,
-  Search,
   MapPin,
-  Star,
+  Search,
   Sparkles,
+  Star,
 } from "lucide-react";
-
 import { motion } from "framer-motion";
 
-
 export default function Hero() {
+  const router = useRouter();
 
+  const [query, setQuery] = useState("");
+
+  function handleSearch(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    const value = query.trim();
+
+    if (!value) return;
+
+    router.push(`/search?q=${encodeURIComponent(value)}`);
+  }
 
   return (
+    <section className="relative isolate min-h-[calc(100svh-80px)] overflow-hidden">
+      {/* =====================================================
+          PARIS BACKGROUND
+      ===================================================== */}
 
-    <section
-      className="
-      relative
-      min-h-[calc(100vh-80px)]
-      overflow-hidden
-      "
-    >
+      <div className="absolute inset-0 -z-20">
+        <img
+          src="/images/paris-hero.jpg"
+          alt="Paris cityscape"
+          className="
+            cinematic-image
+            absolute
+            inset-0
+            h-full
+            w-full
+            object-cover
+            object-center
+            scale-[1.03]
+          "
+        />
 
-
-      {/* Background */}
-
-      <div
-        className="
-        absolute
-        inset-0
-        -z-10
-        bg-gradient-to-br
-        from-orange-50
-        via-white
-        to-emerald-50
-        dark:from-slate-950
-        dark:via-slate-950
-        dark:to-orange-950
-        "
-      />
-
-
-
-      <motion.div
-
-        animate={{
-          scale:[1,1.2,1],
-          rotate:[0,20,0]
-        }}
-
-        transition={{
-          duration:18,
-          repeat:Infinity
-        }}
-
-        className="
-        absolute
-        -left-40
-        top-20
-        h-96
-        w-96
-        rounded-full
-        bg-orange-400/20
-        blur-3xl
-        "
-
-      />
-
-
-
-      <motion.div
-
-        animate={{
-          scale:[1,1.1,1],
-          rotate:[0,-20,0]
-        }}
-
-        transition={{
-          duration:15,
-          repeat:Infinity
-        }}
-
-        className="
-        absolute
-        -right-40
-        bottom-10
-        h-96
-        w-96
-        rounded-full
-        bg-emerald-400/20
-        blur-3xl
-        "
-
-      />
-
-
-
-
-      <div
-        className="
-        mx-auto
-        max-w-7xl
-        px-6
-        py-24
-        "
-      >
-
-
+        {/* Light/Dark atmosphere */}
         <div
           className="
-          grid
-          items-center
-          gap-16
-          lg:grid-cols-2
+            absolute
+            inset-0
+            bg-[rgba(244,241,235,0.28)]
+            backdrop-blur-[1px]
+            dark:bg-[rgba(8,18,34,0.68)]
+            dark:backdrop-blur-[3px]
           "
-        >
+        />
 
+        {/* Cinematic gradient */}
+        <div
+          className="
+            absolute
+            inset-0
+            bg-gradient-to-r
+            from-[#f4f1eb]/80
+            via-[#f4f1eb]/45
+            to-transparent
+            dark:from-[#081222]/95
+            dark:via-[#081222]/62
+            dark:to-transparent
+          "
+        />
 
-          {/* LEFT */}
+        {/* Bottom fade */}
+        <div
+          className="
+            absolute
+            inset-x-0
+            bottom-0
+            h-48
+            bg-gradient-to-t
+            from-[#f4f1eb]
+            to-transparent
+            dark:from-[#0b1220]
+          "
+        />
 
+        {/* Warm cinematic glow */}
+        <div
+          className="
+            absolute
+            left-[8%]
+            top-[18%]
+            h-64
+            w-64
+            rounded-full
+            bg-orange-400/15
+            blur-[100px]
+            dark:bg-orange-400/10
+          "
+        />
+      </div>
 
-          <div>
+      {/* =====================================================
+          CONTENT
+      ===================================================== */}
 
+      <div className="mx-auto flex min-h-[calc(100svh-80px)] max-w-7xl items-center px-5 py-16 sm:px-6 lg:px-8">
+        <div className="grid w-full items-center gap-14 lg:grid-cols-[1.1fr_0.9fr]">
+          {/* =================================================
+              LEFT
+          ================================================= */}
 
-            <motion.div
-
-              initial={{
-                opacity:0,
-                y:20
-              }}
-
-              animate={{
-                opacity:1,
-                y:0
-              }}
-
-              className="
-              inline-flex
-              items-center
-              gap-2
-              rounded-full
-              border
-              border-orange-200
-              bg-white/70
-              px-5
-              py-2
-              text-sm
-              font-semibold
-              text-orange-600
-              backdrop-blur-xl
-              dark:border-orange-900
-              dark:bg-slate-900/70
-              dark:text-orange-400
-              "
-
-            >
-
-              <Sparkles size={16}/>
-
-              Discover new experiences
-
-
-            </motion.div>
-
-
-
-
-            <motion.h1
-
-              initial={{
-                opacity:0,
-                y:40
-              }}
-
-              animate={{
-                opacity:1,
-                y:0
-              }}
-
-              transition={{
-                delay:.15
-              }}
-
-              className="
-              mt-8
-              text-5xl
-              font-black
-              leading-tight
-              text-main
-              sm:text-7xl
-              "
-
-            >
-
-              Discover the world,
-
-              <br/>
-
-              <span className="gradient-text">
-
-                one city at a time.
-
-              </span>
-
-
-            </motion.h1>
-
-
-
-
-            <motion.p
-
-              initial={{
-                opacity:0
-              }}
-
-              animate={{
-                opacity:1
-              }}
-
-              transition={{
-                delay:.4
-              }}
-
-              className="
-              mt-6
-              max-w-xl
-              text-lg
-              leading-8
-              text-muted
-              "
-
-            >
-
-              Explore cities, discover hidden places,
-              read real traveler reviews and create unforgettable journeys.
-
-            </motion.p>
-
-
-
-
-
-            {/* SEARCH */}
-
-
+          <div className="max-w-3xl">
+            {/* Badge */}
 
             <motion.div
-
-              initial={{
-                opacity:0,
-                scale:.95
-              }}
-
-              animate={{
-                opacity:1,
-                scale:1
-              }}
-
-              transition={{
-                delay:.6
-              }}
-
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.65 }}
               className="
-              mt-10
-              "
-
-            >
-
-
-              <div
-                className="
-                flex
-                items-center
-                gap-3
-                rounded-3xl
-                border
-                border-main
-                bg-card/80
-                px-6
-                py-5
-                shadow-xl
-                backdrop-blur-xl
-                "
-
-              >
-
-                <Search
-                  className="text-muted"
-                />
-
-
-                <input
-
-                  placeholder="
-                  Search cities, places or experiences...
-                  "
-
-                  className="
-                  w-full
-                  bg-transparent
-                  outline-none
-                  text-main
-                  "
-
-                />
-
-
-              </div>
-
-
-            </motion.div>
-
-
-
-
-
-            {/* BUTTONS */}
-
-
-            <div
-              className="
-              mt-10
-              flex
-              flex-wrap
-              gap-4
-              "
-            >
-
-
-              <Link
-
-                href="/cities"
-
-                className="
-                group
-                flex
+                inline-flex
                 items-center
                 gap-2
-                rounded-2xl
-                bg-orange-600
-                px-7
-                py-4
-                font-bold
-                text-white
-                transition
-                hover:scale-105
-                hover:bg-orange-700
+                rounded-full
+                border
+                border-white/50
+                bg-white/35
+                px-4
+                py-2
+                text-sm
+                font-semibold
+                text-stone-700
+                shadow-lg
+                backdrop-blur-xl
+                dark:border-white/10
+                dark:bg-slate-900/35
+                dark:text-slate-200
+              "
+            >
+              <Sparkles
+                size={16}
+                className="text-orange-500"
+              />
+
+              Discover somewhere new
+            </motion.div>
+
+            {/* Heading */}
+
+            <motion.h1
+              initial={{ opacity: 0, y: 28 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{
+                duration: 0.75,
+                delay: 0.1,
+              }}
+              className="
+                mt-7
+                max-w-4xl
+                text-5xl
+                font-black
+                leading-[0.96]
+                tracking-[-0.055em]
+                text-stone-900
+                sm:text-6xl
+                md:text-7xl
+                lg:text-[5.4rem]
+                dark:text-white
+              "
+            >
+              Explore cities.
+
+              <br />
+
+              <span className="gradient-text">
+                Find your place.
+              </span>
+            </motion.h1>
+
+            {/* Description */}
+
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{
+                duration: 0.7,
+                delay: 0.25,
+              }}
+              className="
+                mt-7
+                max-w-2xl
+                text-base
+                leading-7
+                text-stone-700
+                sm:text-lg
+                sm:leading-8
+                dark:text-slate-300
+              "
+            >
+              Discover remarkable cities, hidden places,
+              local experiences, and stories shared by
+              people who have been there.
+            </motion.p>
+
+            {/* Search */}
+
+            <motion.form
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{
+                duration: 0.7,
+                delay: 0.4,
+              }}
+              onSubmit={handleSearch}
+              className="mt-8 max-w-2xl"
+            >
+              <div
+                className="
+                  flex
+                  items-center
+                  gap-3
+                  rounded-[1.35rem]
+                  border
+                  border-white/60
+                  bg-white/50
+                  p-2
+                  shadow-[0_25px_80px_rgba(50,40,25,0.16)]
+                  backdrop-blur-2xl
+                  transition-all
+                  duration-300
+                  focus-within:border-orange-400/70
+                  focus-within:bg-white/65
+                  dark:border-white/10
+                  dark:bg-slate-900/50
+                  dark:focus-within:bg-slate-900/65
                 "
-
               >
+                <div
+                  className="
+                    flex
+                    h-12
+                    w-12
+                    shrink-0
+                    items-center
+                    justify-center
+                    rounded-xl
+                    bg-orange-500/15
+                    text-orange-600
+                    dark:bg-orange-400/10
+                    dark:text-orange-400
+                  "
+                >
+                  <Search size={21} />
+                </div>
 
+                <input
+                  type="search"
+                  value={query}
+                  onChange={(event) =>
+                    setQuery(event.target.value)
+                  }
+                  placeholder="Search a city, place, or experience..."
+                  className="
+                    min-w-0
+                    flex-1
+                    bg-transparent
+                    px-1
+                    text-sm
+                    text-stone-900
+                    outline-none
+                    placeholder:text-stone-500
+                    sm:text-base
+                    dark:text-white
+                    dark:placeholder:text-slate-500
+                  "
+                />
+
+                <button
+                  type="submit"
+                  className="
+                    hidden
+                    shrink-0
+                    items-center
+                    gap-2
+                    rounded-xl
+                    bg-stone-900
+                    px-5
+                    py-3
+                    text-sm
+                    font-bold
+                    text-white
+                    transition-all
+                    duration-300
+                    hover:-translate-y-0.5
+                    hover:bg-orange-600
+                    sm:flex
+                    dark:bg-white
+                    dark:text-slate-900
+                    dark:hover:bg-orange-400
+                  "
+                >
+                  Search
+                  <ArrowRight size={16} />
+                </button>
+              </div>
+
+              <p
+                className="
+                  mt-3
+                  pl-2
+                  text-xs
+                  text-stone-500
+                  dark:text-slate-500
+                "
+              >
+                Press Enter to explore
+              </p>
+            </motion.form>
+
+            {/* CTA */}
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{
+                duration: 0.7,
+                delay: 0.5,
+              }}
+              className="mt-7 flex flex-wrap gap-3"
+            >
+              <Link
+                href="/cities"
+                className="
+                  group
+                  inline-flex
+                  items-center
+                  gap-2
+                  rounded-xl
+                  bg-orange-500
+                  px-6
+                  py-3.5
+                  text-sm
+                  font-bold
+                  text-white
+                  shadow-[0_15px_40px_rgba(229,138,36,0.3)]
+                  transition-all
+                  duration-300
+                  hover:-translate-y-1
+                  hover:bg-orange-600
+                  hover:shadow-[0_20px_50px_rgba(229,138,36,0.4)]
+                "
+              >
                 Explore Cities
 
                 <ArrowRight
-                  size={18}
+                  size={17}
                   className="
-                  transition
-                  group-hover:translate-x-1
+                    transition-transform
+                    duration-300
+                    group-hover:translate-x-1
+                  "
+                />
+              </Link>
+
+              <Link
+                href="/places"
+                className="
+                  inline-flex
+                  items-center
+                  gap-2
+                  rounded-xl
+                  border
+                  border-white/60
+                  bg-white/35
+                  px-6
+                  py-3.5
+                  text-sm
+                  font-bold
+                  text-stone-800
+                  backdrop-blur-xl
+                  transition-all
+                  duration-300
+                  hover:-translate-y-1
+                  hover:bg-white/60
+                  dark:border-white/10
+                  dark:bg-slate-900/40
+                  dark:text-white
+                  dark:hover:bg-slate-900/65
+                "
+              >
+                Browse Places
+              </Link>
+            </motion.div>
+
+            {/* Stats */}
+
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{
+                duration: 0.8,
+                delay: 0.65,
+              }}
+              className="
+                mt-9
+                flex
+                flex-wrap
+                items-center
+                gap-5
+                text-sm
+                text-stone-600
+                dark:text-slate-400
+              "
+            >
+              <div className="flex items-center gap-2">
+                <MapPin
+                  size={17}
+                  className="text-orange-500"
+                />
+
+                Explore destinations
+              </div>
+
+              <div
+                className="
+                  hidden
+                  h-4
+                  w-px
+                  bg-stone-400/40
+                  sm:block
+                  dark:bg-slate-500/30
+                "
+              />
+
+              <div className="flex items-center gap-2">
+                <Star
+                  size={17}
+                  className="fill-amber-400 text-amber-400"
+                />
+
+                Real traveler reviews
+              </div>
+            </motion.div>
+          </div>
+
+          {/* =================================================
+              RIGHT — CINEMATIC FLOATING CARD
+          ================================================= */}
+
+          <div className="relative hidden h-[560px] lg:block">
+            <motion.div
+              initial={{
+                opacity: 0,
+                scale: 0.94,
+                y: 25,
+              }}
+              animate={{
+                opacity: 1,
+                scale: 1,
+                y: 0,
+              }}
+              transition={{
+                duration: 0.85,
+                delay: 0.25,
+              }}
+              className="
+                absolute
+                right-4
+                top-8
+                w-[390px]
+                overflow-hidden
+                rounded-[2rem]
+                border
+                border-white/50
+                bg-white/45
+                shadow-[0_30px_100px_rgba(40,35,25,0.2)]
+                backdrop-blur-2xl
+                dark:border-white/10
+                dark:bg-slate-900/45
+              "
+            >
+              {/* Mini image */}
+
+              <div className="relative h-60 overflow-hidden">
+                <img
+                  src="/images/paris-hero.jpg"
+                  alt="Paris"
+                  className="
+                    h-full
+                    w-full
+                    object-cover
+                    brightness-[0.88]
+                    saturate-[0.9]
+                    dark:brightness-[0.65]
                   "
                 />
 
-              </Link>
+                <div
+                  className="
+                    absolute
+                    inset-0
+                    bg-gradient-to-t
+                    from-black/55
+                    via-black/5
+                    to-transparent
+                  "
+                />
 
+                <div
+                  className="
+                    absolute
+                    bottom-5
+                    left-5
+                    flex
+                    items-center
+                    gap-2
+                    rounded-full
+                    border
+                    border-white/30
+                    bg-black/20
+                    px-4
+                    py-2
+                    text-sm
+                    font-bold
+                    text-white
+                    backdrop-blur-xl
+                  "
+                >
+                  <MapPin size={15} />
 
+                  Paris, France
+                </div>
+              </div>
 
+              <div className="p-6">
+                <p
+                  className="
+                    text-xs
+                    font-bold
+                    uppercase
+                    tracking-[0.18em]
+                    text-orange-500
+                  "
+                >
+                  Featured destination
+                </p>
 
-              <Link
+                <div className="mt-2 flex items-center justify-between gap-4">
+                  <h3
+                    className="
+                      text-3xl
+                      font-black
+                      tracking-tight
+                      text-stone-900
+                      dark:text-white
+                    "
+                  >
+                    Paris
+                  </h3>
 
-                href="/places"
+                  <div
+                    className="
+                      flex
+                      items-center
+                      gap-1
+                      rounded-full
+                      bg-amber-400/15
+                      px-3
+                      py-1.5
+                      text-sm
+                      font-bold
+                      text-amber-700
+                      dark:text-amber-300
+                    "
+                  >
+                    <Star
+                      size={14}
+                      className="fill-current"
+                    />
 
-                className="
-                rounded-2xl
-                border
-                border-main
-                bg-card
-                px-7
-                py-4
-                font-bold
-                text-main
-                transition
-                hover:scale-105
-                "
+                    4.9
+                  </div>
+                </div>
 
-              >
-
-                Browse Places
-
-              </Link>
-
-
-
-            </div>
-
-
-
-          </div>
-
-
-
-
-
-          {/* RIGHT */}
-
-
-          <div
-            className="
-            relative
-            hidden
-            h-[520px]
-            lg:block
-            "
-          >
-
-
-
-            <motion.div
-
-              animate={{
-                y:[0,-20,0]
-              }}
-
-              transition={{
-                duration:5,
-                repeat:Infinity
-              }}
-
-              className="
-              absolute
-              right-10
-              top-20
-              w-72
-              rounded-3xl
-              border
-              bg-card/80
-              p-7
-              shadow-2xl
-              backdrop-blur-xl
-              "
-
-            >
-
-              <MapPin
-                className="text-orange-600"
-              />
-
-              <h3 className="
-              mt-5
-              text-2xl
-              font-black
-              text-main
-              ">
-
-                Jakarta
-
-              </h3>
-
-
-              <p className="text-muted">
-
-                Indonesia
-
-              </p>
-
-
+                <p
+                  className="
+                    mt-2
+                    text-sm
+                    leading-6
+                    text-stone-600
+                    dark:text-slate-400
+                  "
+                >
+                  A city of light, art, streets,
+                  cafés, and stories waiting to be
+                  discovered.
+                </p>
+              </div>
             </motion.div>
 
-
-
-
-
-
-            <motion.div
-
-              animate={{
-                y:[0,20,0]
-              }}
-
-              transition={{
-                duration:6,
-                repeat:Infinity
-              }}
-
-              className="
-              absolute
-              bottom-20
-              left-10
-              rounded-3xl
-              border
-              bg-card/80
-              p-7
-              shadow-2xl
-              backdrop-blur-xl
-              "
-
-            >
-
-              <Star
-                className="
-                fill-yellow-400
-                text-yellow-400
-                "
-              />
-
-
-              <h3 className="
-              mt-5
-              text-xl
-              font-bold
-              text-main
-              ">
-
-                4.9 Rating
-
-              </h3>
-
-
-              <p className="text-muted">
-
-                Trusted traveler reviews
-
-              </p>
-
-
-            </motion.div>
-
-
-
+            {/* Floating quote */}
           </div>
-
-
-
         </div>
-
-
       </div>
-
-
     </section>
-
   );
 }

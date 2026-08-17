@@ -1,5 +1,11 @@
 import Link from "next/link";
-import { ArrowLeft, MapPin, Star, Navigation } from "lucide-react";
+import {
+  ArrowLeft,
+  MapPin,
+  Star,
+  Navigation,
+  Compass,
+} from "lucide-react";
 
 import { getPlace } from "@/lib/api";
 import PlaceReviews from "@/components/PlaceReviews/PlaceReviews";
@@ -39,7 +45,6 @@ type Place = {
   averageRating?: number;
 };
 
-
 function Stars({
   rating,
   size = 18,
@@ -56,14 +61,13 @@ function Stars({
           className={
             index < Math.round(rating)
               ? "fill-amber-400 text-amber-400"
-              : "text-slate-300 dark:text-slate-700"
+              : "text-[var(--border-strong)]"
           }
         />
       ))}
     </div>
   );
 }
-
 
 export default async function PlaceDetailsPage({
   params,
@@ -86,88 +90,81 @@ export default async function PlaceDetailsPage({
       ? place.images[0].url
       : null;
 
-
   return (
-    <main className="min-h-screen bg-slate-50 text-slate-900 transition-colors dark:bg-slate-950 dark:text-white">
-
+    <main className="min-h-screen bg-[var(--background)] text-[var(--foreground)]">
       <div className="mx-auto max-w-7xl px-5 py-8 sm:px-6 lg:px-8">
 
         {/* Back */}
         <Link
           href="/places"
-          className="group inline-flex items-center gap-2 text-sm font-medium text-slate-600 transition hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-400"
+          className="group inline-flex items-center gap-2 text-sm font-semibold text-[var(--muted)] transition-all duration-300 hover:-translate-x-1 hover:text-[var(--primary)]"
         >
           <ArrowLeft
             size={17}
-            className="transition-transform group-hover:-translate-x-1"
+            className="transition-transform duration-300 group-hover:-translate-x-1"
           />
 
           Back to places
         </Link>
 
-
         {/* Hero */}
-        <section className="mt-7 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition-colors dark:border-slate-800 dark:bg-slate-900">
+        <section className="mt-7 overflow-hidden rounded-[2rem] border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow)]">
 
-          <div className="relative flex h-72 items-center justify-center overflow-hidden bg-gradient-to-br from-blue-100 via-slate-100 to-cyan-100 dark:from-blue-950 dark:via-slate-900 dark:to-cyan-950 sm:h-96">
+          <div className="relative flex h-72 items-center justify-center overflow-hidden bg-[var(--surface-soft)] sm:h-[420px]">
 
             {image ? (
               <img
                 src={image}
                 alt={place.name}
-                className="h-full w-full object-cover"
+                className="h-full w-full object-cover transition-transform duration-700 hover:scale-[1.02]"
               />
             ) : (
-              <div className="text-8xl">
-                📍
+              <div className="flex h-full w-full items-center justify-center bg-[var(--surface-soft)]">
+                <div className="flex h-24 w-24 items-center justify-center rounded-3xl bg-[var(--primary-soft)] text-[var(--primary)]">
+                  <MapPin size={44} />
+                </div>
               </div>
             )}
 
-            <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
+            <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-black/50 to-transparent" />
 
           </div>
-
 
           <div className="p-6 sm:p-8">
 
             <div className="flex flex-wrap items-center gap-3">
 
-              <span className="rounded-full bg-blue-50 px-3 py-1 text-sm font-semibold text-blue-600 dark:bg-blue-950/50 dark:text-blue-400">
+              <span className="rounded-full bg-[var(--primary-soft)] px-4 py-1.5 text-sm font-bold text-[var(--primary)]">
                 {place.category}
               </span>
 
-
               {place.city && (
-                <span className="flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400">
+                <span className="flex items-center gap-1.5 text-sm font-medium text-[var(--muted)]">
                   <MapPin size={15} />
-
                   {place.city.name}, {place.city.country}
                 </span>
               )}
 
             </div>
 
-
-            <h1 className="mt-4 text-3xl font-bold tracking-tight sm:text-5xl">
+            <h1 className="mt-4 text-3xl font-black tracking-tight sm:text-5xl">
               {place.name}
             </h1>
 
-
-            <p className="mt-4 max-w-3xl text-base leading-7 text-slate-600 dark:text-slate-400">
+            <p className="mt-4 max-w-3xl text-base leading-7 text-[var(--muted)]">
               {place.description}
             </p>
-
 
             {/* Rating */}
             <div className="mt-6 flex flex-wrap items-center gap-4">
 
               <Stars rating={rating} />
 
-              <span className="font-semibold">
+              <span className="font-bold">
                 {rating.toFixed(1)}
               </span>
 
-              <span className="text-sm text-slate-500 dark:text-slate-400">
+              <span className="text-sm text-[var(--muted)]">
                 {reviewsCount}{" "}
                 {reviewsCount === 1
                   ? "review"
@@ -180,57 +177,53 @@ export default async function PlaceDetailsPage({
 
         </section>
 
-
         {/* Information */}
         <section className="mt-8 grid gap-6 md:grid-cols-2">
 
           {/* Location */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <div className="rounded-[1.5rem] border border-[var(--border)] bg-[var(--surface)] p-6 shadow-[var(--shadow)]">
 
             <div className="flex items-center gap-3">
 
-              <div className="rounded-xl bg-blue-50 p-3 text-blue-600 dark:bg-blue-950/50 dark:text-blue-400">
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[var(--primary-soft)] text-[var(--primary)]">
                 <MapPin size={20} />
               </div>
 
-              <h2 className="text-lg font-bold">
+              <h2 className="text-lg font-black">
                 Location
               </h2>
 
             </div>
 
-
             <div className="mt-6 grid gap-5 sm:grid-cols-2">
 
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+              <div className="rounded-xl bg-[var(--surface-soft)] p-4">
+                <p className="text-xs font-bold uppercase tracking-wide text-[var(--muted)]">
                   Latitude
                 </p>
 
-                <p className="mt-1 text-sm font-medium">
+                <p className="mt-1 font-semibold">
                   {place.latitude}
                 </p>
               </div>
 
-
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+              <div className="rounded-xl bg-[var(--surface-soft)] p-4">
+                <p className="text-xs font-bold uppercase tracking-wide text-[var(--muted)]">
                   Longitude
                 </p>
 
-                <p className="mt-1 text-sm font-medium">
+                <p className="mt-1 font-semibold">
                   {place.longitude}
                 </p>
               </div>
 
             </div>
 
-
             <a
               href={`https://www.google.com/maps?q=${place.latitude},${place.longitude}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-6 inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700"
+              className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[var(--primary)] px-5 py-3 text-sm font-bold text-white shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
             >
               <Navigation size={16} />
               Open in Google Maps
@@ -238,27 +231,35 @@ export default async function PlaceDetailsPage({
 
           </div>
 
+          {/* Rating summary */}
+          <div className="rounded-[1.5rem] border border-[var(--border)] bg-[var(--surface)] p-6 shadow-[var(--shadow)]">
 
-          {/* Review summary */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <div className="flex items-center gap-3">
 
-            <h2 className="text-lg font-bold">
-              Rating overview
-            </h2>
-
-
-            <div className="mt-5 flex items-center gap-5">
-
-              <div className="text-5xl font-bold">
-                {rating.toFixed(1)}
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-400/10 text-amber-500">
+                <Star
+                  size={20}
+                  className="fill-current"
+                />
               </div>
 
+              <h2 className="text-lg font-black">
+                Rating overview
+              </h2>
+
+            </div>
+
+            <div className="mt-6 flex items-center gap-5">
+
+              <div className="text-5xl font-black">
+                {rating.toFixed(1)}
+              </div>
 
               <div>
 
                 <Stars rating={rating} />
 
-                <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+                <p className="mt-2 text-sm text-[var(--muted)]">
                   Based on {reviewsCount}{" "}
                   {reviewsCount === 1
                     ? "review"
@@ -273,9 +274,26 @@ export default async function PlaceDetailsPage({
 
         </section>
 
-
         {/* Reviews */}
         <section className="mt-12">
+
+          <div className="mb-6 flex items-center gap-3">
+
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[var(--accent-soft)] text-[var(--accent)]">
+              <Compass size={21} />
+            </div>
+
+            <div>
+              <h2 className="text-2xl font-black">
+                Visitor experiences
+              </h2>
+
+              <p className="text-sm text-[var(--muted)]">
+                See what other visitors think about this place.
+              </p>
+            </div>
+
+          </div>
 
           <PlaceReviews
             placeId={place.id}
@@ -285,7 +303,6 @@ export default async function PlaceDetailsPage({
         </section>
 
       </div>
-
     </main>
   );
 }

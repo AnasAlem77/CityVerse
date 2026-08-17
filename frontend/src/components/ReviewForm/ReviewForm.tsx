@@ -38,9 +38,7 @@ export default function ReviewForm({
       return;
     }
 
-    const token = localStorage.getItem(
-      "cityverse_token",
-    );
+    const token = localStorage.getItem("cityverse_token");
 
     if (!token) {
       setError("Please login before writing a review.");
@@ -74,29 +72,21 @@ export default function ReviewForm({
   }
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900"
-    >
+    <form onSubmit={handleSubmit} className="space-y-7">
 
+      {/* Rating */}
       <div>
-        <h3 className="text-xl font-bold text-slate-900 dark:text-white">
-          Write a review
-        </h3>
+        <div className="mb-3">
+          <p className="text-sm font-bold text-[var(--foreground)]">
+            Your rating
+          </p>
 
-        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-          Share your experience with other CityVerse users.
-        </p>
-      </div>
+          <p className="mt-1 text-xs text-[var(--muted)]">
+            How would you rate this place?
+          </p>
+        </div>
 
-
-      <div className="mt-6">
-
-        <p className="mb-3 text-sm font-semibold text-slate-700 dark:text-slate-200">
-          Your rating
-        </p>
-
-        <div className="flex gap-2">
+        <div className="flex items-center gap-1.5">
 
           {Array.from({ length: 5 }).map((_, index) => {
             const value = index + 1;
@@ -107,30 +97,46 @@ export default function ReviewForm({
                 type="button"
                 onClick={() => setRating(value)}
                 aria-label={`Rate ${value} stars`}
-                className="transition hover:scale-110"
+                className="
+                  rounded-xl
+                  p-2
+                  transition-all
+                  duration-200
+                  hover:scale-110
+                  hover:bg-[var(--accent-soft)]
+                  focus:outline-none
+                  focus:ring-2
+                  focus:ring-[var(--accent)]/30
+                "
               >
                 <Star
-                  size={28}
+                  size={27}
                   className={
                     value <= rating
                       ? "fill-amber-400 text-amber-400"
-                      : "text-slate-300 dark:text-slate-700"
+                      : "text-[var(--border-strong)]"
                   }
                 />
               </button>
             );
           })}
 
-        </div>
+          {rating > 0 && (
+            <span className="ml-3 text-sm font-bold text-[var(--muted)]">
+              {rating}/5
+            </span>
+          )}
 
+        </div>
       </div>
 
 
-      <div className="mt-6">
+      {/* Comment */}
+      <div>
 
         <label
           htmlFor="review-comment"
-          className="mb-2 block text-sm font-semibold text-slate-700 dark:text-slate-200"
+          className="mb-3 block text-sm font-bold text-[var(--foreground)]"
         >
           Your review
         </label>
@@ -141,45 +147,122 @@ export default function ReviewForm({
           onChange={(event) =>
             setComment(event.target.value)
           }
-          placeholder="Tell people what you think about this place..."
-          rows={5}
+          placeholder="Tell other travelers about your experience..."
+          rows={6}
           maxLength={1000}
-          className="w-full resize-none rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+          className="
+            w-full
+            resize-none
+            rounded-2xl
+            border
+            border-[var(--border)]
+            bg-[var(--surface-soft)]
+            px-4
+            py-4
+            text-sm
+            text-[var(--foreground)]
+            outline-none
+            transition-all
+            duration-200
+            placeholder:text-[var(--muted)]
+            focus:border-[var(--accent)]
+            focus:bg-[var(--surface)]
+            focus:ring-4
+            focus:ring-[var(--accent)]/10
+          "
         />
 
-        <p className="mt-2 text-right text-xs text-slate-400">
-          {comment.length}/1000
-        </p>
+        <div className="mt-2 flex justify-end">
+          <span className="text-xs font-medium text-[var(--muted)]">
+            {comment.length}/1000
+          </span>
+        </div>
 
       </div>
 
 
+      {/* Error */}
       {error && (
-        <div className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600 dark:bg-red-950/30 dark:text-red-400">
+        <div
+          className="
+            rounded-2xl
+            border
+            border-red-200
+            bg-red-50
+            px-4
+            py-3
+            text-sm
+            font-medium
+            text-red-600
+            dark:border-red-900/40
+            dark:bg-red-950/20
+            dark:text-red-400
+          "
+        >
           {error}
         </div>
       )}
 
 
+      {/* Success */}
       {success && (
-        <div className="mt-4 rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400">
+        <div
+          className="
+            rounded-2xl
+            border
+            border-emerald-200
+            bg-emerald-50
+            px-4
+            py-3
+            text-sm
+            font-medium
+            text-emerald-600
+            dark:border-emerald-900/40
+            dark:bg-emerald-950/20
+            dark:text-emerald-400
+          "
+        >
           {success}
         </div>
       )}
 
 
+      {/* Submit */}
       <button
         type="submit"
         disabled={loading}
-        className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+        className="
+          group
+          inline-flex
+          w-full
+          items-center
+          justify-center
+          gap-2
+          rounded-2xl
+          bg-[var(--primary)]
+          px-5
+          py-3.5
+          text-sm
+          font-bold
+          text-white
+          shadow-lg
+          shadow-[var(--primary)]/20
+          transition-all
+          duration-300
+          hover:-translate-y-0.5
+          hover:shadow-xl
+          hover:shadow-[var(--primary)]/25
+          disabled:cursor-not-allowed
+          disabled:opacity-60
+          disabled:hover:translate-y-0
+        "
       >
+        <Send
+          size={17}
+          className="transition-transform duration-300 group-hover:translate-x-0.5"
+        />
 
-        <Send size={17} />
-
-        {loading
-          ? "Submitting..."
-          : "Submit Review"}
-
+        {loading ? "Submitting..." : "Submit Review"}
       </button>
 
     </form>

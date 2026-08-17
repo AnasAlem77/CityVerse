@@ -1,22 +1,21 @@
-@import "tailwindcss";
+"use client";
 
-@custom-variant dark (&:where(.dark, .dark *));
+import { ThemeProvider as NextThemesProvider } from "next-themes";
+import type { ReactNode } from "react";
 
-
-:root {
-  --background: #f8fafc;
-  --foreground: #0f172a;
-}
-
-
-.dark {
-  --background: #020617;
-  --foreground: #f8fafc;
-}
-
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  transition: background 0.3s ease, color 0.3s ease;
+export default function ThemeProvider({
+  children,
+}: {
+  children: ReactNode;
+}) {
+  return (
+    <NextThemesProvider
+      attribute="class"
+      defaultTheme="light"
+      enableSystem={false}
+      disableTransitionOnChange
+    >
+      {children}
+    </NextThemesProvider>
+  );
 }
