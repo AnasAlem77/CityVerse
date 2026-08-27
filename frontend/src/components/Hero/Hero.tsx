@@ -14,7 +14,7 @@ import {
   Sparkles,
   Star,
 } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
 type City = {
   id: string;
@@ -40,7 +40,7 @@ export default function Hero({
 
     const timer = setInterval(() => {
       setActiveCity((prev) => (prev + 1) % cities.length);
-    }, 4000);
+    }, 7000);
 
     return () => clearInterval(timer);
   }, [cities]);
@@ -57,31 +57,76 @@ export default function Hero({
     router.push(`/search?q=${encodeURIComponent(value)}`);
   }
 
+  /*
+   * ============================================================
+   * CITY IMAGE MAPPING
+   * ============================================================
+   *
+   * Images are located inside:
+   * public/images/
+   *
+   * Each city has its own specific image mapping.
+   */
+
+  function getCityImage(city: City) {
+    const name = city.name.toLowerCase().trim();
+
+    if (name.includes("paris")) {
+      return "/images/paris.jpg";
+    }
+
+    if (name.includes("london")) {
+      return "/images/london.jpg";
+    }
+
+    if (name.includes("tokyo")) {
+      return "/images/tokyo.jpg";
+    }
+
+    if (name.includes("dubai")) {
+      return "/images/dubai.jpg";
+    }
+
+    if (name.includes("jakarta")) {
+      return "/images/jakarta.jpg";
+    }
+
+    // Fallback to city image data if no specific match is found
+    return city.image;
+  }
+
   return (
     <section className="relative isolate min-h-[calc(100svh-80px)] overflow-hidden">
+
       {/* =====================================================
-          BACKGROUND
+          BACKGROUND — Static Paris Hero Image
       ===================================================== */}
 
       <div className="absolute inset-0 -z-20">
+
         <img
-          src={city?.image || "/images/paris-hero.jpg"}
-          alt={city?.name || "Cityscape"}
+          src="/images/paris-hero.jpg"
+          alt="Paris cityscape"
           className="
-            cinematic-image
             absolute
             inset-0
             h-full
             w-full
             object-cover
             object-center
-            scale-[1.03]
+            scale-[1.06]
+            blur-[4px]
+            brightness-[0.92]
+            saturate-[0.85]
             transition-all
             duration-1000
+            dark:brightness-[0.75]
+            dark:saturate-[0.85]
           "
         />
 
-        {/* Light/Dark atmosphere */}
+        {/* Light / Dark atmosphere */}
+
         <div
           className="
             absolute
@@ -94,6 +139,7 @@ export default function Hero({
         />
 
         {/* Cinematic gradient */}
+
         <div
           className="
             absolute
@@ -109,6 +155,7 @@ export default function Hero({
         />
 
         {/* Bottom fade */}
+
         <div
           className="
             absolute
@@ -123,6 +170,7 @@ export default function Hero({
         />
 
         {/* Warm cinematic glow */}
+
         <div
           className="
             absolute
@@ -136,6 +184,7 @@ export default function Hero({
             dark:bg-orange-400/10
           "
         />
+
       </div>
 
       {/* =====================================================
@@ -143,12 +192,15 @@ export default function Hero({
       ===================================================== */}
 
       <div className="mx-auto flex min-h-[calc(100svh-80px)] max-w-7xl items-center px-5 py-16 sm:px-6 lg:px-8">
+
         <div className="grid w-full items-center gap-14 lg:grid-cols-[1.1fr_0.9fr]">
+
           {/* =================================================
               LEFT
           ================================================= */}
 
           <div className="max-w-3xl">
+
             {/* Badge */}
 
             <motion.div
@@ -338,6 +390,7 @@ export default function Hero({
                   "
                 >
                   Search
+
                   <ArrowRight size={16} />
                 </button>
               </div>
@@ -479,173 +532,243 @@ export default function Hero({
                 Real traveler reviews
               </div>
             </motion.div>
+
           </div>
 
           {/* =================================================
-              RIGHT — CINEMATIC FLOATING CARD
+              RIGHT — CITY CARD
           ================================================= */}
 
           <div className="relative hidden h-[560px] lg:block">
-            {cities[0] && (
-              <Link href={`/cities/${cities[0].id}`}>
-                <motion.div
-                  key={cities[0].id}
-                  initial={{
-                    opacity: 0,
-                    scale: 0.94,
-                    y: 25,
-                  }}
-                  animate={{
-                    opacity: 1,
-                    scale: 1,
-                    y: 0,
-                  }}
-                  transition={{
-                    duration: 0.85,
-                    delay: 0.25,
-                  }}
-                  className="
-                    absolute
-                    right-4
-                    top-8
-                    w-[390px]
-                    overflow-hidden
-                    rounded-[2rem]
-                    border
-                    border-white/50
-                    bg-white/45
-                    shadow-[0_30px_100px_rgba(40,35,25,0.2)]
-                    backdrop-blur-2xl
-                    dark:border-white/10
-                    dark:bg-slate-900/45
-                  "
-                >
-                  {/* Mini image */}
 
-                  <div className="relative h-60 overflow-hidden">
-                    <img
-                      src={cities[0]?.image}
-                      alt={cities[0]?.name}
-                      className="
-                        h-full
-                        w-full
-                        object-cover
-                        brightness-[0.88]
-                        saturate-[0.9]
-                        dark:brightness-[0.65]
-                        transition-all
-                        duration-500
-                        hover:scale-105
-                      "
-                    />
+            {city && (
+              <div className="absolute right-4 top-8 w-[390px]">
 
-                    <div
-                      className="
-                        absolute
-                        inset-0
-                        bg-gradient-to-t
-                        from-black/55
-                        via-black/5
-                        to-transparent
-                      "
-                    />
+                <AnimatePresence mode="wait">
 
-                    <div
-                      className="
-                        absolute
-                        bottom-5
-                        left-5
-                        flex
-                        items-center
-                        gap-2
-                        rounded-full
-                        border
-                        border-white/30
-                        bg-black/20
-                        px-4
-                        py-2
-                        text-sm
-                        font-bold
-                        text-white
-                        backdrop-blur-xl
-                      "
-                    >
-                      <MapPin size={15} />
+                  <motion.div
+                    key={city.id}
+                    initial={{
+                      opacity: 0,
+                      y: 30,
+                      scale: 0.96,
+                    }}
+                    animate={{
+                      opacity: 1,
+                      y: 0,
+                      scale: 1,
+                    }}
+                    exit={{
+                      opacity: 0,
+                      y: -20,
+                      scale: 0.98,
+                    }}
+                    transition={{
+                      duration: 0.8,
+                      ease: [0.16, 1, 0.3, 1],
+                    }}
+                  >
 
-                      {cities[0]?.name}, {cities[0]?.country}
-                    </div>
-                  </div>
-
-                  <div className="p-6">
-                    <p
-                      className="
-                        text-xs
-                        font-bold
-                        uppercase
-                        tracking-[0.18em]
-                        text-orange-500
-                      "
-                    >
-                      Featured destination
-                    </p>
-
-                    <div className="mt-2 flex items-center justify-between gap-4">
-                      <h3
-                        className="
-                          text-3xl
-                          font-black
-                          tracking-tight
-                          text-stone-900
-                          dark:text-white
-                        "
-                      >
-                        {cities[0]?.name}
-                      </h3>
+                    <Link href={`/cities/${city.id}`}>
 
                       <div
                         className="
-                          flex
-                          items-center
-                          gap-1
-                          rounded-full
-                          bg-amber-400/15
-                          px-3
-                          py-1.5
-                          text-sm
-                          font-bold
-                          text-amber-700
-                          dark:text-amber-300
+                          overflow-hidden
+                          rounded-[2rem]
+                          border
+                          border-white/50
+                          bg-white/45
+                          shadow-[0_30px_100px_rgba(40,35,25,0.2)]
+                          backdrop-blur-2xl
+                          dark:border-white/10
+                          dark:bg-slate-900/45
                         "
                       >
-                        <Star
-                          size={14}
-                          className="fill-current"
-                        />
 
-                        4.9
+                        {/* =================================================
+                            CITY IMAGE
+                        ================================================= */}
+
+                        <div className="relative h-60 overflow-hidden">
+
+                          <img
+                            src={getCityImage(city)}
+                            alt={city.name}
+                            className="
+                              h-full
+                              w-full
+                              object-cover
+                              brightness-[0.88]
+                              saturate-[0.9]
+                              dark:brightness-[0.65]
+                              transition-all
+                              duration-500
+                              hover:scale-105
+                            "
+                          />
+
+                          <div
+                            className="
+                              absolute
+                              inset-0
+                              bg-gradient-to-t
+                              from-black/55
+                              via-black/5
+                              to-transparent
+                            "
+                          />
+
+                          <div
+                            className="
+                              absolute
+                              bottom-5
+                              left-5
+                              flex
+                              items-center
+                              gap-2
+                              rounded-full
+                              border
+                              border-white/30
+                              bg-black/20
+                              px-4
+                              py-2
+                              text-sm
+                              font-bold
+                              text-white
+                              backdrop-blur-xl
+                            "
+                          >
+                            <MapPin size={15} />
+
+                            {city.name}, {city.country}
+                          </div>
+
+                        </div>
+
+                        {/* =================================================
+                            CARD CONTENT
+                        ================================================= */}
+
+                        <div className="p-6">
+
+                          <p
+                            className="
+                              text-xs
+                              font-bold
+                              uppercase
+                              tracking-[0.18em]
+                              text-orange-500
+                            "
+                          >
+                            Featured destination
+                          </p>
+
+                          <div
+                            className="
+                              mt-2
+                              flex
+                              items-center
+                              justify-between
+                              gap-4
+                            "
+                          >
+
+                            <h3
+                              className="
+                                text-3xl
+                                font-black
+                                tracking-tight
+                                text-stone-900
+                                dark:text-white
+                              "
+                            >
+                              {city.name}
+                            </h3>
+
+                            <div
+                              className="
+                                flex
+                                items-center
+                                gap-1
+                                rounded-full
+                                bg-amber-400/15
+                                px-3
+                                py-1.5
+                                text-sm
+                                font-bold
+                                text-amber-700
+                                dark:text-amber-300
+                              "
+                            >
+                              <Star
+                                size={14}
+                                className="fill-current"
+                              />
+
+                              4.9
+                            </div>
+
+                          </div>
+
+                          <p
+                            className="
+                              mt-2
+                              text-sm
+                              leading-6
+                              text-stone-600
+                              dark:text-slate-400
+                              line-clamp-3
+                            "
+                          >
+                            {city.description}
+                          </p>
+
+                        </div>
+
                       </div>
-                    </div>
 
-                    <p
-                      className="
-                        mt-2
-                        text-sm
-                        leading-6
-                        text-stone-600
-                        dark:text-slate-400
-                        line-clamp-3
-                      "
-                    >
-                      {cities[0]?.description}
-                    </p>
-                  </div>
-                </motion.div>
-              </Link>
+                    </Link>
+
+                  </motion.div>
+
+                </AnimatePresence>
+
+                {/* =================================================
+                    CITY INDICATORS
+                ================================================= */}
+
+                <div className="mt-4 flex items-center justify-center gap-2">
+
+                  {cities.map((_, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setActiveCity(index)}
+                      className={`
+                        h-1.5
+                        rounded-full
+                        transition-all
+                        duration-500
+                        ${
+                          index === activeCity
+                            ? "w-8 bg-orange-500"
+                            : "w-2 bg-stone-300/70 dark:bg-slate-700"
+                        }
+                      `}
+                      aria-label={`Go to slide ${index + 1}`}
+                    />
+                  ))}
+
+                </div>
+
+              </div>
             )}
-            {/* Floating quote */}
+
           </div>
+
         </div>
+
       </div>
+
     </section>
   );
 }
