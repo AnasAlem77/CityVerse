@@ -28,12 +28,33 @@ export type Review = {
 
 
 export async function getCities() {
-  const res = await fetch(`${API_URL}/cities`, {
-    cache: "no-store",
-  });
+  const res = await fetch(
+    `${API_URL}/cities`,
+    {
+      cache: "no-store",
+    },
+  );
 
   if (!res.ok) {
     throw new Error("Failed to fetch cities");
+  }
+
+  return res.json();
+}
+
+
+export async function getFeaturedCities() {
+  const res = await fetch(
+    `${API_URL}/cities/featured`,
+    {
+      cache: "no-store",
+    },
+  );
+
+  if (!res.ok) {
+    throw new Error(
+      "Failed to fetch featured cities",
+    );
   }
 
   return res.json();
@@ -116,20 +137,16 @@ export async function createReview(data: {
     `${API_URL}/reviews`,
     {
       method: "POST",
-
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-
       body: JSON.stringify(data),
     },
   );
 
-
   if (!res.ok) {
     const error = await res.json().catch(() => null);
-
     throw new Error(
       error?.message || "Failed to create review",
     );
@@ -149,19 +166,15 @@ export async function registerUser(data: {
     `${API_URL}/auth/register`,
     {
       method: "POST",
-
       headers: {
         "Content-Type": "application/json",
       },
-
       body: JSON.stringify(data),
     },
   );
 
-
   if (!res.ok) {
     const error = await res.json().catch(() => null);
-
     throw new Error(
       error?.message || "Registration failed",
     );
@@ -180,11 +193,9 @@ export async function loginUser(
     `${API_URL}/auth/login`,
     {
       method: "POST",
-
       headers: {
         "Content-Type": "application/json",
       },
-
       body: JSON.stringify({
         email,
         password,
@@ -192,10 +203,8 @@ export async function loginUser(
     },
   );
 
-
   if (!res.ok) {
     const error = await res.json().catch(() => null);
-
     throw new Error(
       error?.message || "Invalid email or password",
     );

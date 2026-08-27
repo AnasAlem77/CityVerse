@@ -28,9 +28,16 @@ model User {
 }
 
 model City {
-  id      String @id @default(cuid())
+  id String @id @default(cuid())
+
   name    String
   country String
+
+  description String?
+  image       String?
+
+  featured      Boolean @default(false)
+  featuredOrder Int?
 
   latitude  Decimal @db.Decimal(9, 6)
   longitude Decimal @db.Decimal(9, 6)

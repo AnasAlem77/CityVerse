@@ -2,7 +2,11 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FormEvent, useState } from "react";
+import {
+  FormEvent,
+  useState,
+  useEffect,
+} from "react";
 import {
   ArrowRight,
   MapPin,
@@ -12,10 +16,36 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 
-export default function Hero() {
+type City = {
+  id: string;
+  name: string;
+  country: string;
+  description: string;
+  image: string;
+  featuredOrder: number;
+};
+
+export default function Hero({
+  cities,
+}: {
+  cities: City[];
+}) {
   const router = useRouter();
 
   const [query, setQuery] = useState("");
+  const [activeCity, setActiveCity] = useState(0);
+
+  useEffect(() => {
+    if (!cities.length) return;
+
+    const timer = setInterval(() => {
+      setActiveCity((prev) => (prev + 1) % cities.length);
+    }, 4000);
+
+    return () => clearInterval(timer);
+  }, [cities]);
+
+  const city = cities[activeCity];
 
   function handleSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -30,13 +60,13 @@ export default function Hero() {
   return (
     <section className="relative isolate min-h-[calc(100svh-80px)] overflow-hidden">
       {/* =====================================================
-          PARIS BACKGROUND
+          BACKGROUND
       ===================================================== */}
 
       <div className="absolute inset-0 -z-20">
         <img
-          src="/images/paris-hero.jpg"
-          alt="Paris cityscape"
+          src={city?.image || "/images/paris-hero.jpg"}
+          alt={city?.name || "Cityscape"}
           className="
             cinematic-image
             absolute
@@ -46,6 +76,8 @@ export default function Hero() {
             object-cover
             object-center
             scale-[1.03]
+            transition-all
+            duration-1000
           "
         />
 
@@ -454,156 +486,162 @@ export default function Hero() {
           ================================================= */}
 
           <div className="relative hidden h-[560px] lg:block">
-            <motion.div
-              initial={{
-                opacity: 0,
-                scale: 0.94,
-                y: 25,
-              }}
-              animate={{
-                opacity: 1,
-                scale: 1,
-                y: 0,
-              }}
-              transition={{
-                duration: 0.85,
-                delay: 0.25,
-              }}
-              className="
-                absolute
-                right-4
-                top-8
-                w-[390px]
-                overflow-hidden
-                rounded-[2rem]
-                border
-                border-white/50
-                bg-white/45
-                shadow-[0_30px_100px_rgba(40,35,25,0.2)]
-                backdrop-blur-2xl
-                dark:border-white/10
-                dark:bg-slate-900/45
-              "
-            >
-              {/* Mini image */}
-
-              <div className="relative h-60 overflow-hidden">
-                <img
-                  src="/images/paris-hero.jpg"
-                  alt="Paris"
-                  className="
-                    h-full
-                    w-full
-                    object-cover
-                    brightness-[0.88]
-                    saturate-[0.9]
-                    dark:brightness-[0.65]
-                  "
-                />
-
-                <div
+            {cities[0] && (
+              <Link href={`/cities/${cities[0].id}`}>
+                <motion.div
+                  key={cities[0].id}
+                  initial={{
+                    opacity: 0,
+                    scale: 0.94,
+                    y: 25,
+                  }}
+                  animate={{
+                    opacity: 1,
+                    scale: 1,
+                    y: 0,
+                  }}
+                  transition={{
+                    duration: 0.85,
+                    delay: 0.25,
+                  }}
                   className="
                     absolute
-                    inset-0
-                    bg-gradient-to-t
-                    from-black/55
-                    via-black/5
-                    to-transparent
-                  "
-                />
-
-                <div
-                  className="
-                    absolute
-                    bottom-5
-                    left-5
-                    flex
-                    items-center
-                    gap-2
-                    rounded-full
+                    right-4
+                    top-8
+                    w-[390px]
+                    overflow-hidden
+                    rounded-[2rem]
                     border
-                    border-white/30
-                    bg-black/20
-                    px-4
-                    py-2
-                    text-sm
-                    font-bold
-                    text-white
-                    backdrop-blur-xl
+                    border-white/50
+                    bg-white/45
+                    shadow-[0_30px_100px_rgba(40,35,25,0.2)]
+                    backdrop-blur-2xl
+                    dark:border-white/10
+                    dark:bg-slate-900/45
                   "
                 >
-                  <MapPin size={15} />
+                  {/* Mini image */}
 
-                  Paris, France
-                </div>
-              </div>
-
-              <div className="p-6">
-                <p
-                  className="
-                    text-xs
-                    font-bold
-                    uppercase
-                    tracking-[0.18em]
-                    text-orange-500
-                  "
-                >
-                  Featured destination
-                </p>
-
-                <div className="mt-2 flex items-center justify-between gap-4">
-                  <h3
-                    className="
-                      text-3xl
-                      font-black
-                      tracking-tight
-                      text-stone-900
-                      dark:text-white
-                    "
-                  >
-                    Paris
-                  </h3>
-
-                  <div
-                    className="
-                      flex
-                      items-center
-                      gap-1
-                      rounded-full
-                      bg-amber-400/15
-                      px-3
-                      py-1.5
-                      text-sm
-                      font-bold
-                      text-amber-700
-                      dark:text-amber-300
-                    "
-                  >
-                    <Star
-                      size={14}
-                      className="fill-current"
+                  <div className="relative h-60 overflow-hidden">
+                    <img
+                      src={cities[0]?.image}
+                      alt={cities[0]?.name}
+                      className="
+                        h-full
+                        w-full
+                        object-cover
+                        brightness-[0.88]
+                        saturate-[0.9]
+                        dark:brightness-[0.65]
+                        transition-all
+                        duration-500
+                        hover:scale-105
+                      "
                     />
 
-                    4.9
+                    <div
+                      className="
+                        absolute
+                        inset-0
+                        bg-gradient-to-t
+                        from-black/55
+                        via-black/5
+                        to-transparent
+                      "
+                    />
+
+                    <div
+                      className="
+                        absolute
+                        bottom-5
+                        left-5
+                        flex
+                        items-center
+                        gap-2
+                        rounded-full
+                        border
+                        border-white/30
+                        bg-black/20
+                        px-4
+                        py-2
+                        text-sm
+                        font-bold
+                        text-white
+                        backdrop-blur-xl
+                      "
+                    >
+                      <MapPin size={15} />
+
+                      {cities[0]?.name}, {cities[0]?.country}
+                    </div>
                   </div>
-                </div>
 
-                <p
-                  className="
-                    mt-2
-                    text-sm
-                    leading-6
-                    text-stone-600
-                    dark:text-slate-400
-                  "
-                >
-                  A city of light, art, streets,
-                  cafés, and stories waiting to be
-                  discovered.
-                </p>
-              </div>
-            </motion.div>
+                  <div className="p-6">
+                    <p
+                      className="
+                        text-xs
+                        font-bold
+                        uppercase
+                        tracking-[0.18em]
+                        text-orange-500
+                      "
+                    >
+                      Featured destination
+                    </p>
 
+                    <div className="mt-2 flex items-center justify-between gap-4">
+                      <h3
+                        className="
+                          text-3xl
+                          font-black
+                          tracking-tight
+                          text-stone-900
+                          dark:text-white
+                        "
+                      >
+                        {cities[0]?.name}
+                      </h3>
+
+                      <div
+                        className="
+                          flex
+                          items-center
+                          gap-1
+                          rounded-full
+                          bg-amber-400/15
+                          px-3
+                          py-1.5
+                          text-sm
+                          font-bold
+                          text-amber-700
+                          dark:text-amber-300
+                        "
+                      >
+                        <Star
+                          size={14}
+                          className="fill-current"
+                        />
+
+                        4.9
+                      </div>
+                    </div>
+
+                    <p
+                      className="
+                        mt-2
+                        text-sm
+                        leading-6
+                        text-stone-600
+                        dark:text-slate-400
+                        line-clamp-3
+                      "
+                    >
+                      {cities[0]?.description}
+                    </p>
+                  </div>
+                </motion.div>
+              </Link>
+            )}
             {/* Floating quote */}
           </div>
         </div>

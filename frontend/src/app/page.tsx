@@ -1,16 +1,15 @@
 import Hero from "@/components/Hero/Hero";
+import { getFeaturedCities } from "@/lib/api";
 
 
-export default function Home(){
+export default async function Home(){
+
+  const cities = await getFeaturedCities();
 
   return (
-
     <main>
-
-      <Hero />
-
+      <Hero cities={cities}/>
     </main>
-
   );
 
 }

@@ -1,7 +1,10 @@
 import { Injectable } from '@nestjs/common';
+
 import { PrismaService } from '../prisma/prisma.service';
+
 import { CreateCityDto } from './dto/create-city.dto';
 import { UpdateCityDto } from './dto/update-city.dto';
+
 
 @Injectable()
 export class CitiesService {
@@ -16,6 +19,13 @@ export class CitiesService {
       data: {
         name: data.name,
         country: data.country,
+
+        description: data.description,
+        image: data.image,
+
+        featured: data.featured ?? false,
+        featuredOrder: data.featuredOrder,
+
         latitude: data.latitude,
         longitude: data.longitude,
       },
@@ -27,6 +37,20 @@ export class CitiesService {
     return this.prisma.city.findMany({
       orderBy: {
         name: 'asc',
+      },
+    });
+  }
+
+
+  // Cities displayed in Hero slider
+  async getFeaturedCities() {
+    return this.prisma.city.findMany({
+      where: {
+        featured: true,
+      },
+
+      orderBy: {
+        featuredOrder: 'asc',
       },
     });
   }
@@ -49,6 +73,7 @@ export class CitiesService {
       where: {
         id,
       },
+
       data,
     });
   }
