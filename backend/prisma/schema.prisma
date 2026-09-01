@@ -49,7 +49,11 @@ model City {
 }
 
 model Place {
-  id          String @id @default(cuid())
+  id String @id @default(cuid())
+
+  // OSM identifier
+  osmId String? @unique
+
   name        String
   description String
   category    String

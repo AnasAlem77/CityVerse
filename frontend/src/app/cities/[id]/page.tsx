@@ -23,9 +23,27 @@ type City = {
   id: string;
   name: string;
   country: string;
+  description?: string;
+  image?: string;
   latitude: string;
   longitude: string;
-  places?: Place[];
+  _count?: {
+    places: number;
+  };
+};
+
+type PlacesResponse = {
+  city: {
+    id: string;
+    name: string;
+  };
+  data: Place[];
+  pagination: {
+    total: number;
+    limit: number;
+    offset: number;
+    hasMore: boolean;
+  };
 };
 
 async function getCity(id: string): Promise<City> {
@@ -40,6 +58,21 @@ async function getCity(id: string): Promise<City> {
   return response.json();
 }
 
+async function getCityPlaces(id: string): Promise<PlacesResponse> {
+  const response = await fetch(
+    `${API_URL}/cities/${id}/places?limit=12&offset=0`,
+    {
+      cache: "no-store",
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch city places");
+  }
+
+  return response.json();
+}
+
 export default async function CityDetailsPage({
   params,
 }: {
@@ -47,8 +80,13 @@ export default async function CityDetailsPage({
 }) {
   const { id } = await params;
 
-  const city = await getCity(id);
-  const places = city.places ?? [];
+  const [city, placesResponse] = await Promise.all([
+    getCity(id),
+    getCityPlaces(id),
+  ]);
+
+  const places = placesResponse.data;
+  const totalPlaces = placesResponse.pagination.total;
 
   return (
     <main className="min-h-screen bg-[var(--background)]">
@@ -175,13 +213,31 @@ export default async function CityDetailsPage({
             </h1>
 
             <p className="mt-4 max-w-2xl text-base leading-7 text-[var(--muted)]">
-              Discover amazing places and experiences in {city.name}.
-              Explore local destinations and find something worth
-              remembering.
+              {city.description ??
+                `Discover amazing places and experiences in ${city.name}.`}
             </p>
 
-            {/* Coordinates */}
-            <div className="mt-7 grid gap-4 sm:grid-cols-2">
+            {/* Stats */}
+            <div className="mt-7 grid gap-4 sm:grid-cols-3">
+              <div
+                className="
+                  rounded-2xl
+                  border
+                  border-black/5
+                  bg-[var(--background)]
+                  p-5
+                  dark:border-white/10
+                "
+              >
+                <p className="text-xs font-bold uppercase tracking-[0.15em] text-[var(--muted)]">
+                  Places
+                </p>
+
+                <p className="mt-2 text-2xl font-black text-[var(--foreground)]">
+                  {totalPlaces}
+                </p>
+              </div>
+
               <div
                 className="
                   rounded-2xl
@@ -241,8 +297,7 @@ export default async function CityDetailsPage({
             </div>
 
             <span className="text-sm font-semibold text-[var(--muted)]">
-              {places.length}{" "}
-              {places.length === 1 ? "place" : "places"}
+              Showing {places.length} of {totalPlaces}
             </span>
           </div>
 

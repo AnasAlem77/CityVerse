@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 
@@ -27,15 +28,13 @@ export class CitiesController {
     return this.citiesService.getCities();
   }
 
-
   // Public - Featured cities for Hero slider
   @Get('featured')
   getFeaturedCities() {
     return this.citiesService.getFeaturedCities();
   }
 
-
-  // Public
+  // Public - City details
   @Get(':id')
   getCityById(
     @Param('id') id: string,
@@ -43,6 +42,25 @@ export class CitiesController {
     return this.citiesService.getCityById(id);
   }
 
+  // Public - Places inside a city
+  @Get(':id/places')
+  getCityPlaces(
+    @Param('id') id: string,
+    @Query('category') category?: string,
+    @Query('search') search?: string,
+    @Query('limit') limit?: string,
+    @Query('offset') offset?: string,
+  ) {
+    return this.citiesService.getCityPlaces(
+      id,
+      {
+        category,
+        search,
+        limit: limit ? Number(limit) : undefined,
+        offset: offset ? Number(offset) : undefined,
+      },
+    );
+  }
 
   // Admin only
   @UseGuards(JwtGuard, AdminGuard)
@@ -53,7 +71,6 @@ export class CitiesController {
     return this.citiesService.createCity(data);
   }
 
-
   // Admin only
   @UseGuards(JwtGuard, AdminGuard)
   @Patch(':id')
@@ -63,7 +80,6 @@ export class CitiesController {
   ) {
     return this.citiesService.updateCity(id, data);
   }
-
 
   // Admin only
   @UseGuards(JwtGuard, AdminGuard)
