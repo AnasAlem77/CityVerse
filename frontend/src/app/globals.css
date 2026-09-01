@@ -3,73 +3,60 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme inline {
-
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-
 }
 
-
-/* =========================
+/* ============================================================
    CITYVERSE DESIGN SYSTEM
-========================= */
-
+   ============================================================ */
 
 :root {
-
-  --background: #F8F7F2;
+  --background: #f8f7f2;
   --foreground: #171717;
 
-  --card: #FFFFFF;
+  --card: #ffffff;
 
-  --primary: #0F766E;
+  --primary: #D96C2C;
+  --primary-hover: #C45D24;
 
-  --secondary: #7C3AED;
+  --secondary: #0F766E;
+  --secondary-hover: #0d5f59;
 
   --accent: #F59E0B;
 
-  --muted: #6B7280;
-
+  --muted: #6b7280;
+  --border: rgba(23, 23, 23, 0.08);
 }
 
-
-
 .dark {
-
-  --background: #070A0F;
-  --foreground: #F9FAFB;
+  --background: #0b1220;
+  --foreground: #f9fafb;
 
   --card: #111827;
 
-  --primary: #2DD4BF;
+  --primary: #E98245;
+  --primary-hover: #D96C2C;
 
-  --secondary: #A78BFA;
+  --secondary: #2DD4BF;
+  --secondary-hover: #14b8a6;
 
   --accent: #FBBF24;
 
-  --muted: #94A3B8;
-
+  --muted: #94a3b8;
+  --border: rgba(255, 255, 255, 0.08);
 }
 
-
-
-/* =========================
+/* ============================================================
    BASE
-========================= */
-
+   ============================================================ */
 
 html {
-
   scroll-behavior: smooth;
-
 }
 
-
-
 body {
-
   background: var(--background);
-
   color: var(--foreground);
 
   font-family:
@@ -79,265 +66,146 @@ body {
     sans-serif;
 
   transition:
-    background-color .5s ease,
-    color .5s ease;
-
+    background-color 0.5s ease,
+    color 0.5s ease;
 }
 
-
-
-
-/* =========================
+/* ============================================================
    LIGHT BACKGROUND
-========================= */
-
+   ============================================================ */
 
 html:not(.dark) body {
-
   background:
-
-  radial-gradient(
-    circle at top left,
-    rgba(15,118,110,.12),
-    transparent 35%
-  ),
-
-  radial-gradient(
-    circle at bottom right,
-    rgba(124,58,237,.10),
-    transparent 40%
-  ),
-
-  #F8F7F2;
-
+    radial-gradient(
+      circle at top left,
+      rgba(217, 108, 44, 0.08),
+      transparent 35%
+    ),
+    radial-gradient(
+      circle at bottom right,
+      rgba(15, 118, 110, 0.07),
+      transparent 40%
+    ),
+    #f8f7f2;
 }
 
-
-
-/* =========================
+/* ============================================================
    DARK BACKGROUND
-========================= */
-
+   ============================================================ */
 
 html.dark body {
-
   background:
-
-  radial-gradient(
-    circle at top left,
-    rgba(45,212,191,.12),
-    transparent 35%
-  ),
-
-  radial-gradient(
-    circle at bottom right,
-    rgba(167,139,250,.12),
-    transparent 40%
-  ),
-
-  #070A0F;
-
+    radial-gradient(
+      circle at top left,
+      rgba(233, 130, 69, 0.08),
+      transparent 35%
+    ),
+    radial-gradient(
+      circle at bottom right,
+      rgba(45, 212, 191, 0.08),
+      transparent 40%
+    ),
+    #0b1220;
 }
 
-
-
-
-/* =========================
+/* ============================================================
    BORDERS
-========================= */
-
+   ============================================================ */
 
 * {
-
-  border-color:
-  rgba(15,118,110,.15);
-
+  border-color: var(--border);
 }
 
-
-
-.dark * {
-
-  border-color:
-  rgba(45,212,191,.12);
-
-}
-
-
-
-
-
-/* =========================
+/* ============================================================
    SELECTION
-========================= */
-
+   ============================================================ */
 
 ::selection {
-
-  background:
-  #0F766E;
-
-  color:white;
-
+  background: var(--primary);
+  color: white;
 }
-
-
 
 .dark ::selection {
-
-  background:
-  #2DD4BF;
-
-  color:#070A0F;
-
+  background: var(--primary);
+  color: #0b1220;
 }
 
-
-
-
-/* =========================
+/* ============================================================
    SCROLLBAR
-========================= */
-
+   ============================================================ */
 
 ::-webkit-scrollbar {
-
-  width:10px;
-
+  width: 10px;
 }
-
-
 
 ::-webkit-scrollbar-track {
-
-  background:transparent;
-
+  background: transparent;
 }
-
-
 
 ::-webkit-scrollbar-thumb {
-
-  background:#CBD5E1;
-
-  border-radius:20px;
-
+  background: #d6d3d1;
+  border-radius: 20px;
 }
-
-
 
 .dark::-webkit-scrollbar-thumb {
-
-  background:#334155;
-
+  background: #334155;
 }
 
-
-
-
-
-/* =========================
+/* ============================================================
    GLASS
-========================= */
-
+   ============================================================ */
 
 .glass {
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
 
-  background:
-
-  rgba(255,255,255,.55);
-
-  backdrop-filter:
-
-  blur(24px);
-
+  border: 1px solid rgba(255, 255, 255, 0.45);
 }
-
-
 
 .dark .glass {
-
-  background:
-
-  rgba(17,24,39,.65);
-
+  background: rgba(17, 24, 39, 0.65);
+  border-color: rgba(255, 255, 255, 0.08);
 }
 
-
-
-
-
-/* =========================
+/* ============================================================
    GRADIENT TEXT
-========================= */
-
+   ============================================================ */
 
 .gradient-text {
+  background: linear-gradient(
+    135deg,
+    var(--primary),
+    var(--secondary)
+  );
 
-
-background:
-
-linear-gradient(
-135deg,
-#0F766E,
-#7C3AED
-);
-
-
-background-clip:text;
-
--webkit-background-clip:text;
-
-color:transparent;
-
-
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
 }
-
-
 
 .dark .gradient-text {
+  background: linear-gradient(
+    135deg,
+    var(--primary),
+    var(--secondary)
+  );
 
-
-background:
-
-linear-gradient(
-135deg,
-#2DD4BF,
-#A78BFA
-);
-
-
-background-clip:text;
-
--webkit-background-clip:text;
-
-color:transparent;
-
-
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
 }
 
-
-
-
-/* =========================
+/* ============================================================
    PREMIUM SHADOWS
-========================= */
-
+   ============================================================ */
 
 .soft-shadow {
-
-box-shadow:
-
-0 20px 50px rgba(0,0,0,.08);
-
+  box-shadow:
+    0 20px 50px rgba(40, 35, 25, 0.08);
 }
 
-
-
 .dark .soft-shadow {
-
-box-shadow:
-
-0 20px 50px rgba(0,0,0,.4);
-
+  box-shadow:
+    0 20px 50px rgba(0, 0, 0, 0.4);
 }

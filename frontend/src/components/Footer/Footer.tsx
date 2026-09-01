@@ -1,104 +1,146 @@
 import Link from "next/link";
-import { Compass, MapPin, Heart } from "lucide-react";
-
-const footerLinks = [
-  {
-    title: "Explore",
-    links: [
-      { name: "Home", href: "/" },
-      { name: "Cities", href: "/cities" },
-      { name: "Places", href: "/places" },
-    ],
-  },
-  {
-    title: "CityVerse",
-    links: [
-      { name: "Login", href: "/login" },
-      { name: "Profile", href: "/profile" },
-    ],
-  },
-];
+import { Compass } from "lucide-react";
 
 export default function Footer() {
   return (
-    <footer className="border-t border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950">
-      <div className="mx-auto max-w-7xl px-6 py-14 lg:px-8">
-        <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-4">
-          
+    <footer
+      className="
+        border-t
+        border-stone-300/30
+        bg-[#F4F1EB]
+        transition-colors
+        duration-500
+        dark:border-slate-700/30
+        dark:bg-[#0B1220]
+      "
+    >
+      <div className="mx-auto max-w-7xl px-5 py-8 sm:px-6 lg:px-8">
+        {/* Main Footer */}
+        <div
+          className="
+            flex
+            flex-col
+            gap-6
+            sm:flex-row
+            sm:items-center
+            sm:justify-between
+          "
+        >
           {/* Brand */}
-          <div className="lg:col-span-2">
-            <Link
-              href="/"
-              className="inline-flex items-center gap-3"
+          <Link
+            href="/"
+            className="group inline-flex items-center gap-3"
+          >
+            <div
+              className="
+                flex
+                h-10
+                w-10
+                items-center
+                justify-center
+                rounded-xl
+                bg-[#D96C2C]
+                text-white
+                shadow-lg
+                shadow-[#D96C2C]/15
+                transition-all
+                duration-300
+                group-hover:-translate-y-0.5
+                group-hover:shadow-xl
+                dark:bg-[#E98245]
+                dark:text-[#0B1220]
+                dark:shadow-[#E98245]/10
+              "
             >
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-600 text-white shadow-lg shadow-blue-600/20">
-                <Compass size={23} />
-              </div>
-
-              <span className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
-                City<span className="text-blue-600">Verse</span>
-              </span>
-            </Link>
-
-            <p className="mt-5 max-w-md text-sm leading-6 text-slate-600 dark:text-slate-400">
-              Discover amazing cities, explore beautiful places, read reviews,
-              and save the destinations you love.
-            </p>
-
-            <div className="mt-6 flex items-center gap-5 text-sm text-slate-500 dark:text-slate-400">
-              <span className="flex items-center gap-2">
-                <MapPin size={16} />
-                Explore the world
-              </span>
-
-              <span className="flex items-center gap-2">
-                <Heart size={16} />
-                Save your favorites
-              </span>
+              <Compass size={20} />
             </div>
-          </div>
 
-          {/* Links */}
-          {footerLinks.map((section) => (
-            <div key={section.title}>
-              <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
-                {section.title}
-              </h3>
+            <div>
+              <p
+                className="
+                  text-lg
+                  font-black
+                  tracking-tight
+                  text-stone-900
+                  dark:text-white
+                "
+              >
+                City
+                <span className="text-[#D96C2C] dark:text-[#E98245]">
+                  Verse
+                </span>
+              </p>
 
-              <ul className="mt-5 space-y-3">
-                {section.links.map((link) => (
-                  <li key={link.name}>
-                    <Link
-                      href={link.href}
-                      className="text-sm text-slate-600 transition-colors hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-400"
-                    >
-                      {link.name}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
+              <p
+                className="
+                  text-[10px]
+                  font-medium
+                  text-stone-500
+                  dark:text-slate-500
+                "
+              >
+                Explore beyond limits
+              </p>
             </div>
-          ))}
+          </Link>
+
+          {/* Center */}
+          <p
+            className="
+              hidden
+              text-sm
+              font-medium
+              text-stone-500
+              md:block
+              dark:text-slate-500
+            "
+          >
+            Discover. Explore. Experience.
+          </p>
         </div>
 
         {/* Bottom */}
-        <div className="mt-14 flex flex-col gap-4 border-t border-slate-200 pt-6 text-sm dark:border-slate-800 md:flex-row md:items-center md:justify-between">
-          <p className="text-slate-500 dark:text-slate-400">
+        <div
+          className="
+            mt-7
+            flex
+            flex-col
+            gap-2
+            border-t
+            border-stone-300/30
+            pt-5
+            text-xs
+            text-stone-500
+            sm:flex-row
+            sm:items-center
+            sm:justify-between
+            dark:border-slate-700/30
+            dark:text-slate-500
+          "
+        >
+          <p>
             © 2026 CityVerse. All rights reserved.
           </p>
 
-          <p className="text-slate-500 dark:text-slate-400">
-            Discover. Explore. Experience.
+          <p>
+            Author by{" "}
+            <Link
+              href="https://github.com/AnasAlem77"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="
+                font-semibold
+                text-stone-700
+                transition-colors
+                duration-300
+                hover:text-[#D96C2C]
+                dark:text-slate-300
+                dark:hover:text-[#E98245]
+              "
+            >
+              Anas Alem
+            </Link>
           </p>
-
-          <Link
-            href="https://github.com/AnasAlem77"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="font-medium text-slate-600 transition-colors hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-400"
-          >
-            Author by AnasAlem
-          </Link>
         </div>
       </div>
     </footer>

@@ -83,12 +83,13 @@ export default function Navbar() {
     <nav
       className="
         sticky top-0 z-50
-        border-b border-slate-200/80
-        bg-white/90
+        border-b
+        border-black/5
+        bg-[#F8F7F2]/80
         backdrop-blur-xl
         transition-colors
-        dark:border-slate-800
-        dark:bg-slate-950/90
+        dark:border-white/10
+        dark:bg-[#070A0F]/80
       "
     >
       <div
@@ -115,10 +116,10 @@ export default function Navbar() {
               flex h-10 w-10
               items-center justify-center
               rounded-xl
-              bg-blue-600
+              bg-[#D96C2C]
               text-white
               shadow-md
-              shadow-blue-600/20
+              shadow-[#D96C2C]/20
             "
           >
             <Compass size={21} />
@@ -133,7 +134,7 @@ export default function Navbar() {
               "
             >
               City
-              <span className="text-blue-600 dark:text-blue-400">
+              <span className="text-[#D96C2C] dark:text-[#E98245]">
                 Verse
               </span>
             </p>
@@ -154,9 +155,9 @@ export default function Navbar() {
                 text-sm font-semibold
                 text-slate-600
                 transition-colors
-                hover:text-blue-600
+                hover:text-[#D96C2C]
                 dark:text-slate-300
-                dark:hover:text-blue-400
+                dark:hover:text-[#E98245]
               "
             >
               {link.name}
@@ -171,9 +172,9 @@ export default function Navbar() {
                 text-sm font-semibold
                 text-slate-600
                 transition-colors
-                hover:text-blue-600
+                hover:text-[#D96C2C]
                 dark:text-slate-300
-                dark:hover:text-blue-400
+                dark:hover:text-[#E98245]
               "
             >
               <User size={17} />
@@ -204,14 +205,14 @@ export default function Navbar() {
               className="
                 flex items-center gap-2
                 rounded-xl
-                bg-blue-600
+                bg-[#D96C2C]
                 px-4 py-2.5
                 text-sm font-bold
                 text-white
                 shadow-sm
                 transition-all
                 hover:-translate-y-0.5
-                hover:bg-blue-700
+                hover:bg-[#C45D24]
                 hover:shadow-md
               "
             >
@@ -258,12 +259,12 @@ export default function Navbar() {
               flex h-10 w-10
               items-center justify-center
               rounded-xl
-              border border-slate-200
+              border border-black/10
               text-slate-700
               transition
-              hover:border-blue-300
-              hover:text-blue-600
-              dark:border-slate-700
+              hover:border-[#D96C2C]/40
+              hover:text-[#D96C2C]
+              dark:border-white/10
               dark:text-slate-200
             "
           >
@@ -290,10 +291,11 @@ export default function Navbar() {
             }}
             className="
               overflow-hidden
-              border-t border-slate-200
-              bg-white
-              dark:border-slate-800
-              dark:bg-slate-950
+              border-t border-black/5
+              bg-[#F8F7F2]/95
+              backdrop-blur-xl
+              dark:border-white/10
+              dark:bg-[#070A0F]/95
               md:hidden
             "
           >
@@ -308,11 +310,11 @@ export default function Navbar() {
                     text-sm font-semibold
                     text-slate-700
                     transition
-                    hover:bg-slate-100
-                    hover:text-blue-600
+                    hover:bg-black/5
+                    hover:text-[#D96C2C]
                     dark:text-slate-200
-                    dark:hover:bg-slate-900
-                    dark:hover:text-blue-400
+                    dark:hover:bg-white/5
+                    dark:hover:text-[#E98245]
                   "
                 >
                   {link.name}
@@ -329,9 +331,9 @@ export default function Navbar() {
                       rounded-xl px-4 py-3
                       text-sm font-semibold
                       text-slate-700
-                      hover:bg-slate-100
+                      hover:bg-black/5
                       dark:text-slate-200
-                      dark:hover:bg-slate-900
+                      dark:hover:bg-white/5
                     "
                   >
                     <User size={17} />
@@ -364,11 +366,11 @@ export default function Navbar() {
                   className="
                     mt-2 flex items-center justify-center gap-2
                     rounded-xl
-                    bg-blue-600
+                    bg-[#D96C2C]
                     px-4 py-3
                     text-sm font-bold
                     text-white
-                    hover:bg-blue-700
+                    hover:bg-[#C45D24]
                   "
                 >
                   <LogIn size={17} />

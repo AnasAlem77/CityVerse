@@ -45,6 +45,7 @@ export default async function CitiesPage() {
                 name={city.name}
                 country={city.country}
                 description={city.description}
+                image={city.image}
               />
             ))}
           </div>

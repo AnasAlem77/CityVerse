@@ -1,11 +1,13 @@
+import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, Compass, MapPin } from "lucide-react";
+import { ArrowRight, MapPin } from "lucide-react";
 
 type CityCardProps = {
   id: string;
   name: string;
   country: string;
   description?: string;
+  image: string;
 };
 
 export default function CityCard({
@@ -13,6 +15,7 @@ export default function CityCard({
   name,
   country,
   description,
+  image,
 }: CityCardProps) {
   return (
     <Link
@@ -33,85 +36,34 @@ export default function CityCard({
         dark:border-white/10
       "
     >
-      {/* Visual area */}
-      <div
-        className="
-          relative
-          flex
-          h-52
-          items-center
-          justify-center
-          overflow-hidden
-          bg-gradient-to-br
-          from-orange-100
-          via-emerald-100
-          to-slate-100
-          dark:from-orange-950
-          dark:via-emerald-950
-          dark:to-slate-950
-        "
-      >
-        {/* Glow */}
+      {/* Image */}
+      <div className="relative h-60 overflow-hidden">
+        <Image
+          src={image}
+          alt={name}
+          fill
+          className="
+            object-cover
+            transition-transform
+            duration-700
+            group-hover:scale-105
+          "
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+        />
+
+        {/* Image overlay */}
         <div
           className="
             absolute
-            -right-10
-            -top-10
-            h-32
-            w-32
-            rounded-full
-            bg-orange-400/20
-            blur-3xl
-            transition-transform
-            duration-700
-            group-hover:scale-150
+            inset-0
+            bg-gradient-to-t
+            from-black/60
+            via-black/10
+            to-transparent
           "
         />
 
-        <div
-          className="
-            absolute
-            -bottom-10
-            -left-10
-            h-32
-            w-32
-            rounded-full
-            bg-emerald-400/20
-            blur-3xl
-            transition-transform
-            duration-700
-            group-hover:scale-150
-          "
-        />
-
-        {/* Compass */}
-        <div
-          className="
-            relative
-            flex
-            h-20
-            w-20
-            items-center
-            justify-center
-            rounded-3xl
-            border
-            border-white/40
-            bg-white/60
-            text-orange-500
-            shadow-xl
-            backdrop-blur-xl
-            transition-transform
-            duration-500
-            group-hover:scale-110
-            group-hover:rotate-3
-            dark:border-white/10
-            dark:bg-black/30
-          "
-        >
-          <Compass size={38} strokeWidth={1.8} />
-        </div>
-
-        {/* Country badge */}
+        {/* Country */}
         <div
           className="
             absolute
@@ -122,21 +74,18 @@ export default function CityCard({
             gap-2
             rounded-full
             border
-            border-white/40
-            bg-white/80
+            border-white/30
+            bg-black/30
             px-4
             py-2
             text-sm
             font-bold
-            text-slate-800
+            text-white
             shadow-lg
             backdrop-blur-md
-            dark:border-white/10
-            dark:bg-black/40
-            dark:text-white
           "
         >
-          <MapPin size={14} className="text-orange-500" />
+          <MapPin size={14} className="text-orange-400" />
           {country}
         </div>
       </div>
@@ -185,9 +134,9 @@ export default function CityCard({
               text-orange-500
               transition-all
               duration-500
+              group-hover:translate-x-1
               group-hover:bg-orange-500
               group-hover:text-white
-              group-hover:translate-x-1
             "
           >
             <ArrowRight size={18} />
