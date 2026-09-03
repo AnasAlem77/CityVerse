@@ -33,6 +33,7 @@ export class CitiesService {
       orderBy: {
         name: 'asc',
       },
+
       include: {
         _count: {
           select: {
@@ -48,9 +49,11 @@ export class CitiesService {
       where: {
         featured: true,
       },
+
       orderBy: {
         featuredOrder: 'asc',
       },
+
       include: {
         _count: {
           select: {
@@ -66,6 +69,7 @@ export class CitiesService {
       where: {
         id,
       },
+
       include: {
         _count: {
           select: {
@@ -95,6 +99,7 @@ export class CitiesService {
       where: {
         id: cityId,
       },
+
       select: {
         id: true,
         name: true,
@@ -140,19 +145,35 @@ export class CitiesService {
     const [places, total] = await Promise.all([
       this.prisma.place.findMany({
         where,
+
         orderBy: {
           name: 'asc',
         },
+
         skip: offset,
         take: limit,
+
         select: {
           id: true,
           osmId: true,
+
           name: true,
           description: true,
           category: true,
+
+          address: true,
+          website: true,
+          phone: true,
+          openingHours: true,
+          cuisine: true,
+          wheelchair: true,
+          internetAccess: true,
+
           latitude: true,
           longitude: true,
+
+          cityId: true,
+
           createdAt: true,
           updatedAt: true,
         },
@@ -165,7 +186,9 @@ export class CitiesService {
 
     return {
       city,
+
       data: places,
+
       pagination: {
         total,
         limit,
@@ -183,6 +206,7 @@ export class CitiesService {
       where: {
         id,
       },
+
       data,
     });
   }

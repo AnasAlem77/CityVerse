@@ -1,12 +1,9 @@
-import Link from "next/link";
-import {
-  ArrowLeft,
-  ArrowRight,
-  MapPin,
-  Star,
-} from "lucide-react";
+"use client";
 
-const API_URL = "http://localhost:3001";
+import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
+import Link from "next/link";
+import { ArrowLeft, MapPin, Star } from "lucide-react";
 
 type Place = {
   id: string;
@@ -22,21 +19,10 @@ type Place = {
 type City = {
   id: string;
   name: string;
-  country: string;
-  description?: string;
-  image?: string;
-  latitude: string;
-  longitude: string;
-  _count?: {
-    places: number;
-  };
 };
 
 type PlacesResponse = {
-  city: {
-    id: string;
-    name: string;
-  };
+  city: City;
   data: Place[];
   pagination: {
     total: number;
@@ -46,497 +32,191 @@ type PlacesResponse = {
   };
 };
 
-async function getCity(id: string): Promise<City> {
-  const response = await fetch(`${API_URL}/cities/${id}`, {
-    cache: "no-store",
-  });
-
-  if (!response.ok) {
-    throw new Error("Failed to fetch city");
-  }
-
-  return response.json();
+function isArabic(text: string) {
+  return /[\u0600-\u06FF]/.test(text);
 }
 
-async function getCityPlaces(id: string): Promise<PlacesResponse> {
-  const response = await fetch(
-    `${API_URL}/cities/${id}/places?limit=12&offset=0`,
-    {
-      cache: "no-store",
-    },
-  );
-
-  if (!response.ok) {
-    throw new Error("Failed to fetch city places");
-  }
-
-  return response.json();
-}
-
-export default async function CityDetailsPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  const { id } = await params;
-
-  const [city, placesResponse] = await Promise.all([
-    getCity(id),
-    getCityPlaces(id),
-  ]);
-
-  const places = placesResponse.data;
-  const totalPlaces = placesResponse.pagination.total;
+function PlaceCard({ place }: { place: Place }) {
+  const arabicName = isArabic(place.name);
 
   return (
-    <main className="min-h-screen bg-[var(--background)]">
-      <div className="mx-auto max-w-7xl px-6 py-12 lg:px-8">
-
-        {/* Back */}
-        <Link
-          href="/cities"
-          className="
-            inline-flex
-            items-center
-            gap-2
-            text-sm
-            font-semibold
-            text-[var(--muted)]
-            transition-all
-            duration-300
-            hover:gap-3
-            hover:text-orange-500
-          "
-        >
-          <ArrowLeft size={17} />
-          Back to cities
-        </Link>
-
-        {/* City Hero */}
-        <section
-          className="
-            mt-8
-            overflow-hidden
-            rounded-3xl
-            border
-            border-black/5
-            bg-[var(--card)]
-            shadow-sm
-            dark:border-white/10
-          "
-        >
-          {/* Visual */}
-          <div
-            className="
-              relative
-              flex
-              min-h-80
-              items-center
-              justify-center
-              overflow-hidden
-              bg-gradient-to-br
-              from-orange-100
-              via-emerald-100
-              to-slate-100
-              dark:from-orange-950
-              dark:via-emerald-950
-              dark:to-slate-950
-            "
-          >
-            <div
-              className="
-                absolute
-                -left-20
-                -top-20
-                h-64
-                w-64
-                rounded-full
-                bg-orange-400/20
-                blur-3xl
-              "
-            />
-
-            <div
-              className="
-                absolute
-                -bottom-20
-                -right-20
-                h-64
-                w-64
-                rounded-full
-                bg-emerald-400/20
-                blur-3xl
-              "
-            />
-
-            <div
-              className="
-                relative
-                flex
-                h-28
-                w-28
-                items-center
-                justify-center
-                rounded-[2rem]
-                border
-                border-white/40
-                bg-white/60
-                text-orange-500
-                shadow-2xl
-                backdrop-blur-xl
-                dark:border-white/10
-                dark:bg-black/30
-              "
-            >
-              <MapPin size={52} strokeWidth={1.5} />
-            </div>
+    <Link href={`/places/${place.id}`} className="group block">
+      <article className="overflow-hidden rounded-3xl border border-[var(--border)] bg-[var(--card)] transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
+        {/* Image area - ready for Place images */}
+        <div className="relative aspect-[16/10] overflow-hidden bg-[var(--secondary)]/10">
+          <div className="flex h-full items-center justify-center">
+            <MapPin className="h-10 w-10 text-[var(--secondary)]/40" />
           </div>
 
-          {/* Information */}
-          <div className="p-7 sm:p-9">
-            <div className="flex items-center gap-2 text-sm font-bold text-orange-500">
-              <MapPin size={16} />
-              {city.country}
-            </div>
+          <div className="absolute left-4 top-4">
+            <span className="rounded-full bg-[var(--card)]/90 px-3 py-1.5 text-xs font-semibold capitalize text-[var(--secondary)] shadow-sm backdrop-blur-sm">
+              {place.category}
+            </span>
+          </div>
+        </div>
 
+        {/* Card content */}
+        <div className="p-5">
+          <h3
+            dir={arabicName ? "rtl" : "ltr"}
+            className={`line-clamp-1 text-xl text-[var(--foreground)] ${
+              arabicName ? "font-arabic font-bold" : "font-black"
+            }`}
+          >
+            {place.name}
+          </h3>
+
+          <div className="mt-3 flex items-center justify-between">
+            {place.averageRating !== undefined ? (
+              <div className="flex items-center gap-1.5 text-sm">
+                <Star className="h-4 w-4 fill-[var(--accent)] text-[var(--accent)]" />
+                <span className="font-semibold text-[var(--foreground)]">
+                  {place.averageRating.toFixed(1)}
+                </span>
+
+                {place.reviewsCount !== undefined && (
+                  <span className="text-[var(--muted)]">
+                    ({place.reviewsCount})
+                  </span>
+                )}
+              </div>
+            ) : (
+              <span className="text-sm text-[var(--muted)]">
+                No reviews yet
+              </span>
+            )}
+
+            <span className="text-sm font-semibold text-[var(--primary)] transition-colors group-hover:text-[var(--primary-hover)]">
+              Explore
+            </span>
+          </div>
+        </div>
+      </article>
+    </Link>
+  );
+}
+
+export default function CityPage() {
+  const params = useParams();
+  const id = params.id as string;
+
+  const [city, setCity] = useState<City | null>(null);
+  const [places, setPlaces] = useState<Place[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (!id) return;
+
+    async function loadCity() {
+      try {
+        setLoading(true);
+        setError("");
+
+        const response = await fetch(
+          `http://localhost:3001/cities/${id}/places?limit=12&offset=0`,
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to load city places");
+        }
+
+        const result: PlacesResponse = await response.json();
+
+        setCity(result.city);
+        setPlaces(result.data);
+      } catch (err) {
+        console.error(err);
+        setError("Unable to load places for this city.");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadCity();
+  }, [id]);
+
+  const cityIsArabic = city ? isArabic(city.name) : false;
+
+  return (
+    <div className="min-h-screen bg-[var(--background)]">
+      <section className="mx-auto max-w-7xl px-6 pb-16 pt-32 lg:px-8">
+        {/* Header */}
+        <div className="mb-10">
+          <Link
+            href="/"
+            className="mb-6 inline-flex items-center gap-2 text-sm font-semibold text-[var(--muted)] transition-colors hover:text-[var(--primary)]"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to cities
+          </Link>
+
+          {city && (
             <h1
-              className="
-                mt-3
-                text-4xl
-                font-black
-                tracking-tight
-                text-[var(--foreground)]
-                sm:text-5xl
-              "
+              dir={cityIsArabic ? "rtl" : "ltr"}
+              className={`text-4xl tracking-tight text-[var(--foreground)] md:text-5xl ${
+                cityIsArabic ? "font-arabic font-bold" : "font-black"
+              }`}
             >
               {city.name}
             </h1>
+          )}
 
-            <p className="mt-4 max-w-2xl text-base leading-7 text-[var(--muted)]">
-              {city.description ??
-                `Discover amazing places and experiences in ${city.name}.`}
-            </p>
+          <p className="mt-3 max-w-2xl text-base leading-7 text-[var(--muted)]">
+            Explore places, restaurants, attractions and other points of
+            interest in this city.
+          </p>
+        </div>
 
-            {/* Stats */}
-            <div className="mt-7 grid gap-4 sm:grid-cols-3">
+        {/* Loading */}
+        {loading && (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, index) => (
               <div
-                className="
-                  rounded-2xl
-                  border
-                  border-black/5
-                  bg-[var(--background)]
-                  p-5
-                  dark:border-white/10
-                "
+                key={index}
+                className="overflow-hidden rounded-3xl border border-[var(--border)] bg-[var(--card)]"
               >
-                <p className="text-xs font-bold uppercase tracking-[0.15em] text-[var(--muted)]">
-                  Places
-                </p>
-
-                <p className="mt-2 text-2xl font-black text-[var(--foreground)]">
-                  {totalPlaces}
-                </p>
+                <div className="aspect-[16/10] animate-pulse bg-[var(--secondary)]/10" />
+                <div className="space-y-3 p-5">
+                  <div className="h-6 w-2/3 animate-pulse rounded-lg bg-[var(--secondary)]/10" />
+                  <div className="h-4 w-1/3 animate-pulse rounded-lg bg-[var(--secondary)]/10" />
+                </div>
               </div>
-
-              <div
-                className="
-                  rounded-2xl
-                  border
-                  border-black/5
-                  bg-[var(--background)]
-                  p-5
-                  dark:border-white/10
-                "
-              >
-                <p className="text-xs font-bold uppercase tracking-[0.15em] text-[var(--muted)]">
-                  Latitude
-                </p>
-
-                <p className="mt-2 text-lg font-bold text-[var(--foreground)]">
-                  {city.latitude}
-                </p>
-              </div>
-
-              <div
-                className="
-                  rounded-2xl
-                  border
-                  border-black/5
-                  bg-[var(--background)]
-                  p-5
-                  dark:border-white/10
-                "
-              >
-                <p className="text-xs font-bold uppercase tracking-[0.15em] text-[var(--muted)]">
-                  Longitude
-                </p>
-
-                <p className="mt-2 text-lg font-bold text-[var(--foreground)]">
-                  {city.longitude}
-                </p>
-              </div>
-            </div>
+            ))}
           </div>
-        </section>
+        )}
+
+        {/* Error */}
+        {!loading && error && (
+          <div className="rounded-3xl border border-red-500/20 bg-red-500/5 p-8 text-center">
+            <p className="text-sm text-red-500">{error}</p>
+          </div>
+        )}
+
+        {/* Empty */}
+        {!loading && !error && places.length === 0 && (
+          <div className="rounded-3xl border border-[var(--border)] bg-[var(--card)] p-10 text-center">
+            <MapPin className="mx-auto mb-4 h-10 w-10 text-[var(--muted)]" />
+
+            <h2 className="text-xl font-bold text-[var(--foreground)]">
+              No places found
+            </h2>
+
+            <p className="mt-2 text-sm text-[var(--muted)]">
+              There are no places available for this city yet.
+            </p>
+          </div>
+        )}
 
         {/* Places */}
-        <section className="mt-14">
-          <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <p className="text-sm font-bold uppercase tracking-[0.2em] text-orange-500">
-                Explore
-              </p>
-
-              <h2 className="mt-2 text-3xl font-black tracking-tight text-[var(--foreground)]">
-                Places in {city.name}
-              </h2>
-
-              <p className="mt-3 text-[var(--muted)]">
-                Discover interesting places around the city.
-              </p>
-            </div>
-
-            <span className="text-sm font-semibold text-[var(--muted)]">
-              Showing {places.length} of {totalPlaces}
-            </span>
+        {!loading && !error && places.length > 0 && (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {places.map((place) => (
+              <PlaceCard key={place.id} place={place} />
+            ))}
           </div>
-
-          {places.length > 0 ? (
-            <div className="grid gap-7 sm:grid-cols-2 lg:grid-cols-3">
-              {places.map((place) => (
-                <Link
-                  key={place.id}
-                  href={`/places/${place.id}`}
-                  className="
-                    group
-                    overflow-hidden
-                    rounded-3xl
-                    border
-                    border-black/5
-                    bg-[var(--card)]
-                    shadow-sm
-                    transition-all
-                    duration-500
-                    hover:-translate-y-2
-                    hover:shadow-2xl
-                    dark:border-white/10
-                  "
-                >
-                  {/* Place visual */}
-                  <div
-                    className="
-                      relative
-                      flex
-                      h-48
-                      items-center
-                      justify-center
-                      overflow-hidden
-                      bg-gradient-to-br
-                      from-orange-100
-                      via-emerald-100
-                      to-slate-100
-                      dark:from-orange-950
-                      dark:via-emerald-950
-                      dark:to-slate-950
-                    "
-                  >
-                    <div
-                      className="
-                        absolute
-                        -right-8
-                        -top-8
-                        h-28
-                        w-28
-                        rounded-full
-                        bg-orange-400/20
-                        blur-3xl
-                        transition-transform
-                        duration-700
-                        group-hover:scale-150
-                      "
-                    />
-
-                    <div
-                      className="
-                        absolute
-                        -bottom-8
-                        -left-8
-                        h-28
-                        w-28
-                        rounded-full
-                        bg-emerald-400/20
-                        blur-3xl
-                        transition-transform
-                        duration-700
-                        group-hover:scale-150
-                      "
-                    />
-
-                    <div
-                      className="
-                        relative
-                        flex
-                        h-16
-                        w-16
-                        items-center
-                        justify-center
-                        rounded-2xl
-                        border
-                        border-white/40
-                        bg-white/60
-                        text-orange-500
-                        shadow-xl
-                        backdrop-blur-xl
-                        transition-all
-                        duration-500
-                        group-hover:scale-110
-                        group-hover:rotate-3
-                        dark:border-white/10
-                        dark:bg-black/30
-                      "
-                    >
-                      <MapPin size={32} strokeWidth={1.7} />
-                    </div>
-
-                    {/* Category */}
-                    <span
-                      className="
-                        absolute
-                        bottom-4
-                        left-4
-                        rounded-full
-                        border
-                        border-white/40
-                        bg-white/80
-                        px-3
-                        py-1.5
-                        text-xs
-                        font-bold
-                        uppercase
-                        tracking-wider
-                        text-slate-800
-                        shadow-lg
-                        backdrop-blur-md
-                        dark:border-white/10
-                        dark:bg-black/40
-                        dark:text-white
-                      "
-                    >
-                      {place.category || "Place"}
-                    </span>
-
-                    {/* Rating */}
-                    {place.averageRating != null &&
-                      place.averageRating > 0 && (
-                        <span
-                          className="
-                            absolute
-                            right-4
-                            top-4
-                            flex
-                            items-center
-                            gap-1
-                            rounded-full
-                            bg-black/70
-                            px-3
-                            py-1.5
-                            text-xs
-                            font-bold
-                            text-white
-                            backdrop-blur-md
-                          "
-                        >
-                          <Star
-                            size={13}
-                            className="fill-yellow-400 text-yellow-400"
-                          />
-                          {Number(place.averageRating).toFixed(1)}
-                        </span>
-                      )}
-                  </div>
-
-                  {/* Place information */}
-                  <div className="p-6">
-                    <p className="text-xs font-bold uppercase tracking-[0.15em] text-orange-500">
-                      {place.category || "Destination"}
-                    </p>
-
-                    <h3
-                      className="
-                        mt-2
-                        text-xl
-                        font-black
-                        tracking-tight
-                        text-[var(--foreground)]
-                        transition-colors
-                        duration-300
-                        group-hover:text-orange-500
-                      "
-                    >
-                      {place.name}
-                    </h3>
-
-                    <p className="mt-3 line-clamp-3 text-sm leading-6 text-[var(--muted)]">
-                      {place.description}
-                    </p>
-
-                    <div className="mt-6 flex items-center justify-between">
-                      <span className="text-sm font-bold text-[var(--foreground)]">
-                        View place
-                      </span>
-
-                      <span
-                        className="
-                          flex
-                          h-9
-                          w-9
-                          items-center
-                          justify-center
-                          rounded-full
-                          bg-orange-500/10
-                          text-orange-500
-                          transition-all
-                          duration-500
-                          group-hover:translate-x-1
-                          group-hover:bg-orange-500
-                          group-hover:text-white
-                        "
-                      >
-                        <ArrowRight size={17} />
-                      </span>
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          ) : (
-            <div
-              className="
-                rounded-3xl
-                border
-                border-dashed
-                border-black/10
-                bg-[var(--card)]
-                p-12
-                text-center
-                dark:border-white/10
-              "
-            >
-              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-orange-500/10 text-orange-500">
-                <MapPin size={30} />
-              </div>
-
-              <h3 className="mt-5 text-xl font-black text-[var(--foreground)]">
-                No places yet
-              </h3>
-
-              <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-[var(--muted)]">
-                There are currently no places registered for this city.
-              </p>
-            </div>
-          )}
-        </section>
-      </div>
-    </main>
+        )}
+      </section>
+    </div>
   );
 }

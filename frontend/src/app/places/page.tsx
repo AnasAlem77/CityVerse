@@ -44,6 +44,7 @@ export default async function PlacesPage() {
                 id={place.id}
                 name={place.name}
                 description={place.description}
+                address={place.address}
                 category={place.category}
                 averageRating={place.averageRating}
               />

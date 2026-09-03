@@ -352,7 +352,9 @@ export default function Hero({
                       setQuery(event.target.value)
                     }
                     placeholder="Search a city, place, or experience..."
-                    className="
+                    lang={/[\u0600-\u06FF]/.test(query) ? "ar" : "en"}
+                    dir={/[\u0600-\u06FF]/.test(query) ? "rtl" : "ltr"}
+                    className={`
                       min-w-0
                       flex-1
                       bg-transparent
@@ -364,7 +366,12 @@ export default function Hero({
                       sm:text-base
                       dark:text-white
                       dark:placeholder:text-slate-500
-                    "
+                      ${
+                        /[\u0600-\u06FF]/.test(query)
+                          ? "font-arabic font-medium"
+                          : "font-sans"
+                      }
+                    `}
                   />
 
                   <button

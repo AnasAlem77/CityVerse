@@ -44,4 +44,13 @@ export class OsmController {
         : 5000,
     );
   }
+
+  @Post('update-existing')
+  updateExistingPlaces(
+    @Query('cityId') cityId: string,
+  ) {
+    return this.osmService.updateExistingPlacesFromOsm(
+      cityId,
+    );
+  }
 }

@@ -1,12 +1,20 @@
 import Link from "next/link";
-import { ArrowRight, MapPin, Star } from "lucide-react";
+import {
+  ArrowRight,
+  MapPin,
+  Star,
+} from "lucide-react";
 import Rating from "../Rating/Rating";
+
+const isArabic = (text: string) =>
+  /[\u0600-\u06FF]/.test(text);
 
 type PlaceCardProps = {
   id: string;
   name: string;
   description: string;
   category: string;
+  address?: string | null;
   averageRating?: number;
 };
 
@@ -15,8 +23,11 @@ export default function PlaceCard({
   name,
   description,
   category,
+  address,
   averageRating = 0,
 }: PlaceCardProps) {
+  const arabic = isArabic(name);
+
   return (
     <Link
       href={`/places/${id}`}
@@ -112,7 +123,10 @@ export default function PlaceCard({
             dark:bg-black/30
           "
         >
-          <MapPin size={38} strokeWidth={1.8} />
+          <MapPin
+            size={38}
+            strokeWidth={1.8}
+          />
         </div>
 
         {/* Category */}
@@ -179,26 +193,87 @@ export default function PlaceCard({
           {category || "Destination"}
         </p>
 
+        {/* Place name */}
         <h3
-          className="
+          lang={arabic ? "ar" : "en"}
+          dir={arabic ? "rtl" : "ltr"}
+          className={`
             mt-2
             text-2xl
-            font-black
             tracking-tight
             text-[var(--foreground)]
             transition-colors
             duration-300
             group-hover:text-orange-500
-          "
+            ${
+              arabic
+                ? "font-arabic font-bold"
+                : "font-black"
+            }
+          `}
         >
           {name}
         </h3>
 
-        <p className="mt-3 line-clamp-3 text-sm leading-6 text-[var(--muted)]">
-          {description || "Discover this amazing place."}
-        </p>
+        {/* Address */}
+        {address && (
+          <div
+            className="
+              mt-3
+              flex
+              items-start
+              gap-2
+              text-sm
+              leading-6
+              text-[var(--muted)]
+            "
+          >
+            <MapPin
+              size={16}
+              className="
+                mt-1
+                shrink-0
+                text-orange-500
+              "
+            />
 
-        {/* Existing Rating */}
+            <span
+              lang={
+                isArabic(address)
+                  ? "ar"
+                  : "en"
+              }
+              dir={
+                isArabic(address)
+                  ? "rtl"
+                  : "ltr"
+              }
+              className={
+                isArabic(address)
+                  ? "font-arabic"
+                  : ""
+              }
+            >
+              {address}
+            </span>
+          </div>
+        )}
+
+        {/* Description */}
+        {description && (
+          <p className="mt-3 line-clamp-3 text-sm leading-6 text-[var(--muted)]">
+            {description}
+          </p>
+        )}
+
+        {/* Fallback when no extra data exists */}
+        {!description && !address && (
+          <p className="mt-3 text-sm leading-6 text-[var(--muted)]">
+            Discover this amazing place.
+          </p>
+        )}
+
+        {/* Rating */}
         <div className="mt-4">
           <Rating value={averageRating} />
         </div>

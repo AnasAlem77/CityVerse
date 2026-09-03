@@ -54,9 +54,17 @@ model Place {
   // OSM identifier
   osmId String? @unique
 
-  name        String
-  description String
-  category    String
+  name          String
+  description   String
+  category      String
+
+  address       String?
+  website       String?
+  phone         String?
+  openingHours  String?
+  cuisine       String?
+  wheelchair    String?
+  internetAccess String?
 
   latitude  Decimal @db.Decimal(9, 6)
   longitude Decimal @db.Decimal(9, 6)
