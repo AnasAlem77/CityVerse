@@ -1,8 +1,17 @@
+import Link from "next/link";
 import { getCities } from "@/lib/api";
 import CityCard from "@/components/CityCard/CityCard";
 
-export default async function CitiesPage() {
-  const cities = await getCities();
+type CitiesPageProps = {
+  searchParams: Promise<{ page?: string }>;
+};
+
+export default async function CitiesPage({ searchParams }: CitiesPageProps) {
+  const params = await searchParams;
+  const parsedPage = Number.parseInt(params.page ?? "1", 10);
+  const page = Number.isFinite(parsedPage) && parsedPage > 0 ? parsedPage : 1;
+  const result = await getCities(page, 12);
+  const cities = result.data;
 
   return (
     <main className="min-h-screen bg-[var(--background)]">
@@ -38,16 +47,38 @@ export default async function CitiesPage() {
           </div>
         ) : (
           <div className="grid gap-7 sm:grid-cols-2 lg:grid-cols-3">
-            {cities.map((city: any) => (
+            {cities.map((city) => (
               <CityCard
                 key={city.id}
                 id={city.id}
                 name={city.name}
                 country={city.country}
-                description={city.description}
-                image={city.image}
+                description={city.description ?? undefined}
+                image={city.image ?? ""}
               />
             ))}
+          </div>
+        )}
+
+        {result.totalPages > 1 && (
+          <div className="mt-12 flex items-center justify-center gap-3">
+            <Link
+              href={page > 2 ? `/cities?page=${page - 1}` : "/cities"}
+              aria-disabled={page <= 1}
+              className={`rounded-full border px-4 py-2 text-sm font-bold ${page <= 1 ? "pointer-events-none opacity-40" : "hover:border-[var(--primary)]"}`}
+            >
+              Previous
+            </Link>
+            <span className="px-3 text-sm font-semibold text-[var(--muted)]">
+              Page {page} of {result.totalPages}
+            </span>
+            <Link
+              href={`/cities?page=${Math.min(result.totalPages, page + 1)}`}
+              aria-disabled={page >= result.totalPages}
+              className={`rounded-full border px-4 py-2 text-sm font-bold ${page >= result.totalPages ? "pointer-events-none opacity-40" : "hover:border-[var(--primary)]"}`}
+            >
+              Next
+            </Link>
           </div>
         )}
       </section>

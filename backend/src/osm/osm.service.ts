@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 
 import { PrismaService } from '../prisma/prisma.service';
+import { getCityCoverage } from './city-coverage';
 
 interface OverpassElement {
   type: string;
@@ -27,6 +28,7 @@ export interface OsmPlace {
   name: string;
   description: string;
   category: string;
+  subtype?: string;
   latitude: number;
   longitude: number;
   address?: string;
@@ -36,6 +38,7 @@ export interface OsmPlace {
   cuisine?: string;
   wheelchair?: string;
   internetAccess?: string;
+  rawTags: Record<string, string>;
 }
 
 @Injectable()
@@ -62,6 +65,125 @@ export class OsmService {
     private readonly prisma: PrismaService,
   ) {}
 
+  async collectRawPlacesForCity(
+    cityId: string,
+    persist = false,
+  ) {
+    const city = await this.prisma.city.findUnique({
+      where: { id: cityId },
+      select: { id: true, name: true },
+    });
+
+    if (!city) {
+      throw new NotFoundException(`City with id ${cityId} not found`);
+    }
+
+    const coverage = getCityCoverage(city.name);
+    if (!coverage) {
+      throw new NotFoundException(`No coverage configured for ${city.name}`);
+    }
+
+    const places = new Map<string, OsmPlace>();
+    let failedTiles = 0;
+    for (let south = coverage.south; south < coverage.north; south += coverage.tileDegrees) {
+      for (let west = coverage.west; west < coverage.east; west += coverage.tileDegrees) {
+        const north = Math.min(south + coverage.tileDegrees, coverage.north);
+        const east = Math.min(west + coverage.tileDegrees, coverage.east);
+        const query = this.buildCoverageQuery(south, west, north, east);
+        let response: OverpassResponse;
+        try {
+          response = await this.fetchOverpass(query);
+        } catch (error) {
+          failedTiles++;
+          this.logger.warn(
+            `Skipping failed ${city.name} tile ${south},${west}: ${error instanceof Error ? error.message : String(error)}`,
+          );
+          continue;
+        }
+
+        for (const element of response.elements) {
+          const place = this.mapOsmPlace(element);
+          if (place && place.category !== 'other') {
+            places.set(place.id, place);
+          }
+        }
+      }
+    }
+
+    if (persist) {
+      for (const place of places.values()) {
+        await this.prisma.rawPlace.upsert({
+          where: { cityId_osmId: { cityId, osmId: place.id } },
+          update: this.rawPlaceData(place),
+          create: { cityId, ...this.rawPlaceData(place) },
+        });
+      }
+    }
+
+    const byCategory = [...places.values()].reduce<Record<string, number>>((counts, place) => {
+      counts[place.category] = (counts[place.category] ?? 0) + 1;
+      return counts;
+    }, {});
+
+    return {
+      cityId,
+      cityName: city.name,
+      persisted: persist,
+      coverage,
+      candidates: places.size,
+      failedTiles,
+      byCategory,
+      rawPlaces: [...places.values()],
+    };
+  }
+
+  private buildCoverageQuery(
+    south: number,
+    west: number,
+    north: number,
+    east: number,
+  ) {
+    const bbox = `${south},${west},${north},${east}`;
+    return `
+      [out:json][timeout:120];
+      (
+        nwr["shop"](${bbox});
+        nwr["amenity"~"hospital|university|restaurant"](${bbox});
+        nwr["tourism"~"hotel|attraction"](${bbox});
+      );
+      out center tags;
+    `;
+  }
+
+  private rawPlaceData(place: OsmPlace) {
+    return {
+      osmId: place.id,
+      name: place.name,
+      category: place.category,
+      subtype: place.subtype ?? null,
+      rawTags: place.rawTags,
+      description: place.description || '',
+      address: place.address ?? null,
+      website: place.website ?? null,
+      phone: place.phone ?? null,
+      openingHours: place.openingHours ?? null,
+      cuisine: place.cuisine ?? null,
+      wheelchair: place.wheelchair ?? null,
+      internetAccess: place.internetAccess ?? null,
+      latitude: place.latitude,
+      longitude: place.longitude,
+      qualityScore: [
+        place.name,
+        place.address,
+        place.website,
+        place.phone,
+        place.openingHours,
+        place.subtype,
+        place.id,
+      ].filter(Boolean).length,
+    };
+  }
+
   // ============================================================
   // SEARCH NEARBY PLACES
   // ============================================================
@@ -84,7 +206,14 @@ export class OsmService {
         ];
 
     const categoryQueries = categories
-      .map((item) => this.buildCategoryFilter(item))
+      .map((item) =>
+        this.buildCategoryFilter(
+          item,
+          latitude,
+          longitude,
+          radius,
+        ),
+      )
       .filter(Boolean);
 
     const query = `
@@ -147,6 +276,7 @@ export class OsmService {
           name: place.name,
           description: place.description || '',
           category: place.category,
+          subtype: place.subtype || undefined,
           address: place.address || null,
           website: place.website || null,
           phone: place.phone || null,
@@ -165,6 +295,7 @@ export class OsmService {
           name: place.name,
           description: place.description || '',
           category: place.category,
+          subtype: place.subtype || null,
           address: place.address || null,
           website: place.website || null,
           phone: place.phone || null,
@@ -220,7 +351,11 @@ export class OsmService {
       'shop',
     ]
       .map((category) =>
-        this.buildCategoryFilter(category),
+        this.buildCategoryFilter(
+          category,
+          Number(city.latitude),
+          Number(city.longitude),
+        ),
       )
       .filter(Boolean);
 
@@ -253,6 +388,7 @@ export class OsmService {
           name: place.name,
           description: place.description || '',
           category: place.category,
+          subtype: place.subtype || undefined,
           address: place.address || null,
           website: place.website || null,
           phone: place.phone || null,
@@ -271,6 +407,7 @@ export class OsmService {
           name: place.name,
           description: place.description || '',
           category: place.category,
+          subtype: place.subtype || null,
           address: place.address || null,
           website: place.website || null,
           phone: place.phone || null,
@@ -512,6 +649,7 @@ export class OsmService {
         const updateData: {
           name: string;
           category: string;
+          subtype?: string;
           latitude: number;
           longitude: number;
           description?: string;
@@ -528,6 +666,10 @@ export class OsmService {
           latitude: osmPlace.latitude,
           longitude: osmPlace.longitude,
         };
+
+        if (osmPlace.subtype?.trim()) {
+          updateData.subtype = osmPlace.subtype.trim();
+        }
 
         // Only update optional fields when
         // OSM actually has a non-empty value.
@@ -788,6 +930,9 @@ export class OsmService {
     const category =
       this.detectCategory(tags);
 
+    const subtype =
+      this.detectSubtype(tags, category);
+
     const address =
       this.buildAddress(tags);
 
@@ -799,6 +944,7 @@ export class OsmService {
         tags.comment?.trim() ||
         '',
       category,
+      subtype,
       latitude,
       longitude,
       address,
@@ -816,6 +962,7 @@ export class OsmService {
         tags.wheelchair?.trim(),
       internetAccess:
         tags.internet_access?.trim(),
+      rawTags: tags,
     };
   }
 
@@ -859,6 +1006,29 @@ export class OsmService {
     return 'other';
   }
 
+  private detectSubtype(
+    tags: Record<string, string>,
+    category: string,
+  ): string | undefined {
+    if (category === 'shop') {
+      return tags.shop?.trim();
+    }
+
+    if (category === 'restaurant') {
+      return tags.cuisine?.trim();
+    }
+
+    if (category === 'hospital') {
+      return tags.healthcare?.trim();
+    }
+
+    if (category === 'university') {
+      return tags.education?.trim();
+    }
+
+    return undefined;
+  }
+
   // ============================================================
   // BUILD ADDRESS
   // ============================================================
@@ -888,103 +1058,45 @@ export class OsmService {
 
   private buildCategoryFilter(
     category: string,
+    latitude: number,
+    longitude: number,
+    radius = 5000,
   ): string {
+    const around = `around:${Math.min(
+      Math.max(Math.floor(radius), 100),
+      50000,
+    )},${latitude},${longitude}`;
+
     switch (category) {
       case 'hospital':
         return `
-          nwr(
-            around:5000,
-            LATITUDE,
-            LONGITUDE
-          )["amenity"="hospital"];
-        `.replace(
-          /LATITUDE/g,
-          '0',
-        )
-        .replace(
-          /LONGITUDE/g,
-          '0',
-        );
+          nwr(${around})["amenity"="hospital"];
+        `;
 
       case 'university':
         return `
-          nwr(
-            around:5000,
-            LATITUDE,
-            LONGITUDE
-          )["amenity"="university"];
-        `.replace(
-          /LATITUDE/g,
-          '0',
-        )
-        .replace(
-          /LONGITUDE/g,
-          '0',
-        );
+          nwr(${around})["amenity"="university"];
+        `;
 
       case 'restaurant':
         return `
-          nwr(
-            around:5000,
-            LATITUDE,
-            LONGITUDE
-          )["amenity"="restaurant"];
-        `.replace(
-          /LATITUDE/g,
-          '0',
-        )
-        .replace(
-          /LONGITUDE/g,
-          '0',
-        );
+          nwr(${around})["amenity"="restaurant"];
+        `;
 
       case 'hotel':
         return `
-          nwr(
-            around:5000,
-            LATITUDE,
-            LONGITUDE
-          )["tourism"="hotel"];
-        `.replace(
-          /LATITUDE/g,
-          '0',
-        )
-        .replace(
-          /LONGITUDE/g,
-          '0',
-        );
+          nwr(${around})["tourism"="hotel"];
+        `;
 
       case 'attraction':
         return `
-          nwr(
-            around:5000,
-            LATITUDE,
-            LONGITUDE
-          )["tourism"="attraction"];
-        `.replace(
-          /LATITUDE/g,
-          '0',
-        )
-        .replace(
-          /LONGITUDE/g,
-          '0',
-        );
+          nwr(${around})["tourism"="attraction"];
+        `;
 
       case 'shop':
         return `
-          nwr(
-            around:5000,
-            LATITUDE,
-            LONGITUDE
-          )["shop"];
-        `.replace(
-          /LATITUDE/g,
-          '0',
-        )
-        .replace(
-          /LONGITUDE/g,
-          '0',
-        );
+          nwr(${around})["shop"];
+        `;
 
       default:
         return '';

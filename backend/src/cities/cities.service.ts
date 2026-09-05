@@ -1,9 +1,16 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { Prisma } from '../../generated/prisma/client';
 
 import { PrismaService } from '../prisma/prisma.service';
 
 import { CreateCityDto } from './dto/create-city.dto';
 import { UpdateCityDto } from './dto/update-city.dto';
+
+type PlacesSort =
+  | 'name_asc'
+  | 'name_desc'
+  | 'newest'
+  | 'most_reviewed';
 
 @Injectable()
 export class CitiesService {
@@ -28,20 +35,37 @@ export class CitiesService {
     });
   }
 
-  async getCities() {
-    return this.prisma.city.findMany({
-      orderBy: {
-        name: 'asc',
-      },
+  async getCities(page = 1, limit = 12) {
+    const safePage = Math.max(1, Math.floor(page));
+    const safeLimit = Math.min(100, Math.max(1, Math.floor(limit)));
+    const skip = (safePage - 1) * safeLimit;
 
-      include: {
-        _count: {
-          select: {
-            places: true,
+    const [total, data] = await this.prisma.$transaction([
+      this.prisma.city.count(),
+      this.prisma.city.findMany({
+        skip,
+        take: safeLimit,
+        orderBy: [
+          { name: 'asc' },
+          { id: 'asc' },
+        ],
+        include: {
+          _count: {
+            select: {
+              places: true,
+            },
           },
         },
-      },
-    });
+      }),
+    ]);
+
+    return {
+      data,
+      page: safePage,
+      limit: safeLimit,
+      total,
+      totalPages: Math.max(1, Math.ceil(total / safeLimit)),
+    };
   }
 
   async getFeaturedCities() {
@@ -90,7 +114,9 @@ export class CitiesService {
     cityId: string,
     filters: {
       category?: string;
+      subtype?: string;
       search?: string;
+      sort?: string;
       limit?: number;
       offset?: number;
     },
@@ -111,7 +137,7 @@ export class CitiesService {
     }
 
     const limit = Math.min(
-      Math.max(filters.limit ?? 50, 1),
+      Math.max(filters.limit ?? 12, 1),
       100,
     );
 
@@ -120,14 +146,14 @@ export class CitiesService {
       0,
     );
 
-    const where: {
-      cityId: string;
-      category?: string;
-      name?: {
-        contains: string;
-        mode: 'insensitive';
-      };
-    } = {
+    const sort: PlacesSort =
+      filters.sort === 'name_desc' ||
+      filters.sort === 'newest' ||
+      filters.sort === 'most_reviewed'
+        ? filters.sort
+        : 'name_asc';
+
+    const where: Prisma.PlaceWhereInput = {
       cityId,
     };
 
@@ -135,65 +161,175 @@ export class CitiesService {
       where.category = filters.category;
     }
 
-    if (filters.search) {
-      where.name = {
-        contains: filters.search,
-        mode: 'insensitive',
-      };
+    if (filters.subtype) {
+      where.subtype = filters.subtype;
     }
 
-    const [places, total] = await Promise.all([
-      this.prisma.place.findMany({
-        where,
+    if (filters.search?.trim()) {
+      const search = filters.search.trim();
+      where.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { description: { contains: search, mode: 'insensitive' } },
+        { address: { contains: search, mode: 'insensitive' } },
+        { category: { contains: search, mode: 'insensitive' } },
+        { subtype: { contains: search, mode: 'insensitive' } },
+      ];
+    }
 
-        orderBy: {
-          name: 'asc',
-        },
+    const orderBy =
+      sort === 'name_desc'
+        ? [
+            {
+              name: 'desc' as const,
+            },
+          ]
+        : sort === 'newest'
+          ? [
+              {
+                createdAt: 'desc' as const,
+              },
+            ]
+          : sort === 'most_reviewed'
+            ? [
+                {
+                  reviews: {
+                    _count: 'desc' as const,
+                  },
+                },
+                {
+                  name: 'asc' as const,
+                },
+              ]
+            : [
+                {
+                  name: 'asc' as const,
+                },
+              ];
 
-        skip: offset,
-        take: limit,
+    const [places, total, categories, subtypes] =
+      await Promise.all([
+        this.prisma.place.findMany({
+          where,
 
-        select: {
-          id: true,
-          osmId: true,
+          orderBy,
 
-          name: true,
-          description: true,
-          category: true,
+          skip: offset,
+          take: limit,
 
-          address: true,
-          website: true,
-          phone: true,
-          openingHours: true,
-          cuisine: true,
-          wheelchair: true,
-          internetAccess: true,
+          select: {
+            id: true,
+            osmId: true,
 
-          latitude: true,
-          longitude: true,
+            name: true,
+            description: true,
+            category: true,
+            subtype: true,
 
-          cityId: true,
+            address: true,
+            website: true,
+            phone: true,
+            openingHours: true,
+            cuisine: true,
+            wheelchair: true,
+            internetAccess: true,
 
-          createdAt: true,
-          updatedAt: true,
-        },
-      }),
+            latitude: true,
+            longitude: true,
 
-      this.prisma.place.count({
-        where,
-      }),
-    ]);
+            cityId: true,
+
+            createdAt: true,
+            updatedAt: true,
+
+            _count: {
+              select: {
+                reviews: true,
+              },
+            },
+          },
+        }),
+
+        this.prisma.place.count({
+          where,
+        }),
+
+        this.prisma.place.findMany({
+          where: {
+            cityId,
+          },
+
+          distinct: ['category'],
+
+          select: {
+            category: true,
+          },
+
+          orderBy: {
+            category: 'asc',
+          },
+        }),
+
+        this.prisma.place.findMany({
+          where: {
+            cityId,
+            subtype: {
+              not: null,
+            },
+          },
+          distinct: ['category', 'subtype'],
+          select: {
+            category: true,
+            subtype: true,
+          },
+          orderBy: [
+            { category: 'asc' },
+            { subtype: 'asc' },
+          ],
+        }),
+      ]);
+
+    const data = places.map((place) => ({
+      ...place,
+
+      reviewsCount: place._count.reviews,
+
+      averageRating: undefined,
+
+      _count: undefined,
+    }));
 
     return {
       city,
 
-      data: places,
+      data,
+
+      categories: categories
+        .map((item) => item.category)
+        .filter(Boolean),
+
+      subtypes: subtypes
+        .filter((item) => item.subtype)
+        .map((item) => ({
+          category: item.category,
+          value: item.subtype as string,
+        })),
 
       pagination: {
         total,
         limit,
         offset,
         hasMore: offset + places.length < total,
+        currentPage:
+          Math.floor(offset / limit) + 1,
+        totalPages:
+          Math.ceil(total / limit),
+      },
+
+      filters: {
+        category: filters.category ?? null,
+        subtype: filters.subtype ?? null,
+        search: filters.search?.trim() || null,
+        sort,
       },
     };
   }

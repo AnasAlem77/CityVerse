@@ -14,6 +14,7 @@ type PlaceCardProps = {
   name: string;
   description: string;
   category: string;
+  subtype?: string | null;
   address?: string | null;
   averageRating?: number;
 };
@@ -23,6 +24,7 @@ export default function PlaceCard({
   name,
   description,
   category,
+  subtype,
   address,
   averageRating = 0,
 }: PlaceCardProps) {
@@ -153,7 +155,7 @@ export default function PlaceCard({
             dark:text-white
           "
         >
-          {category || "Place"}
+          {subtype ? `${category} · ${subtype.replaceAll("_", " ")}` : category || "Place"}
         </div>
 
         {/* Rating badge */}
@@ -190,7 +192,7 @@ export default function PlaceCard({
       {/* Content */}
       <div className="p-6">
         <p className="text-xs font-bold uppercase tracking-[0.18em] text-orange-500">
-          {category || "Destination"}
+          {subtype ? `${category} · ${subtype.replaceAll("_", " ")}` : category || "Destination"}
         </p>
 
         {/* Place name */}

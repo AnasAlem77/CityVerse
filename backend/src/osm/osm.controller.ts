@@ -28,6 +28,15 @@ export class OsmController {
     );
   }
 
+  // Read-only wide-coverage candidate report. Persistence is intentionally
+  // not exposed through this endpoint.
+  @Get('coverage/preview')
+  previewCoverage(
+    @Query('cityId') cityId: string,
+  ) {
+    return this.osmService.collectRawPlacesForCity(cityId, false);
+  }
+
   @Post('import')
   importNearbyPlaces(
     @Query('cityId') cityId: string,

@@ -1,21 +1,29 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import {
   ArrowLeft,
-  MapPin,
-  Star,
-  Navigation,
-  Compass,
-  Globe,
-  Phone,
-  Utensils,
-  Wifi,
-  Clock,
-  Accessibility,
   ExternalLink,
+  Globe,
+  MapPin,
+  Phone,
+  Star,
 } from "lucide-react";
 
-import { getPlace } from "@/lib/api";
 import PlaceReviews from "@/components/PlaceReviews/PlaceReviews";
+
+type City = {
+  id: string;
+  name: string;
+};
+
+type PlaceImage = {
+  id: string;
+  url?: string;
+  imageUrl?: string;
+};
 
 type Review = {
   id: string;
@@ -30,551 +38,404 @@ type Review = {
 
 type Place = {
   id: string;
+  osmId?: string | null;
   name: string;
-  description: string;
-  category: string;
-  latitude: string;
-  longitude: string;
-
+  description?: string | null;
+  category?: string | null;
+  subtype?: string | null;
   address?: string | null;
   website?: string | null;
   phone?: string | null;
   openingHours?: string | null;
   cuisine?: string | null;
-  wheelchair?: string | null;
+  wheelchair?: boolean | null;
   internetAccess?: string | null;
-
-  city?: {
-    id: string;
-    name: string;
-    country: string;
-  };
-
-  images?: {
-    id: string;
-    url: string;
-  }[];
-
-  reviews?: Review[];
-  reviewsCount?: number;
-  averageRating?: number;
+  latitude: string;
+  longitude: string;
+  cityId: string;
+  createdAt: string;
+  updatedAt: string;
+  city?: City | null;
+  images?: PlaceImage[];
+  reviews: Review[];
+  reviewsCount: number;
+  averageRating: number;
 };
-
-function Stars({
-  rating,
-  size = 18,
-}: {
-  rating: number;
-  size?: number;
-}) {
-  return (
-    <div className="flex items-center gap-1">
-      {Array.from({ length: 5 }).map((_, index) => (
-        <Star
-          key={index}
-          size={size}
-          className={
-            index < Math.round(rating)
-              ? "fill-amber-400 text-amber-400"
-              : "text-[var(--border-strong)]"
-          }
-        />
-      ))}
-    </div>
-  );
-}
 
 function isArabic(text: string) {
   return /[\u0600-\u06FF]/.test(text);
 }
 
-function cleanWebsiteUrl(value: string) {
-  const markdownMatch = value.match(
-    /^\[([^\]]+)\]\((https?:\/\/[^)]+)\)$/,
-  );
-
-  if (markdownMatch) {
-    return markdownMatch[2];
-  }
-
-  if (/^https?:\/\//i.test(value)) {
-    return value;
-  }
-
-  return `https://${value}`;
-}
-
-function formatWebsite(value: string) {
-  const cleanUrl = cleanWebsiteUrl(value);
-
-  return cleanUrl
-    .replace(/^https?:\/\//i, "")
-    .replace(/^www\./i, "")
-    .replace(/\/$/, "");
-}
-
-function formatOpeningHours(hours: string) {
-  return hours.replace(/;/g, " • ");
-}
-
-function formatInternetAccess(value: string) {
-  const normalized = value.toLowerCase();
-
-  if (
-    normalized.includes("wlan") ||
-    normalized.includes("wifi") ||
-    normalized.includes("wi-fi")
-  ) {
-    return "Wi-Fi";
-  }
-
-  return value;
-}
-
-function formatWheelchair(value: string) {
-  const normalized = value.toLowerCase();
-
-  if (normalized === "yes") {
-    return "Wheelchair accessible";
-  }
-
-  if (normalized === "no") {
-    return "Not wheelchair accessible";
-  }
-
-  if (normalized === "limited") {
-    return "Limited accessibility";
-  }
-
-  return value;
-}
-
-export default async function PlaceDetailsPage({
-  params,
+function InfoRow({
+  icon,
+  label,
+  children,
 }: {
-  params: Promise<{ id: string }>;
+  icon: React.ReactNode;
+  label: string;
+  children: React.ReactNode;
 }) {
-  const { id } = await params;
+  return (
+    <div className="flex gap-4">
+      <div className="mt-0.5 shrink-0 text-[var(--primary)]">{icon}</div>
 
-  const place = (await getPlace(id)) as Place;
+      <div className="min-w-0">
+        <p className="text-xs font-bold uppercase tracking-wide text-[var(--muted)]">
+          {label}
+        </p>
 
-  const rating = place.averageRating ?? 0;
+        <div className="mt-1 text-sm leading-6 text-[var(--foreground)]">
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+}
 
-  const reviewsCount =
-    place.reviewsCount ??
-    place.reviews?.length ??
-    0;
+function Rating({
+  rating,
+  reviewsCount,
+}: {
+  rating: number;
+  reviewsCount: number;
+}) {
+  return (
+    <div className="flex items-center gap-2">
+      <div className="flex items-center gap-0.5">
+        {Array.from({ length: 5 }).map((_, index) => (
+          <Star
+            key={index}
+            className={
+              index < Math.round(rating)
+                ? "h-5 w-5 fill-amber-400 text-amber-400"
+                : "h-5 w-5 text-[var(--border-strong)]"
+            }
+          />
+        ))}
+      </div>
 
-  const image =
-    place.images && place.images.length > 0
-      ? place.images[0].url
-      : null;
+      <span className="font-bold text-[var(--foreground)]">
+        {rating.toFixed(1)}
+      </span>
 
-  const arabicName = isArabic(place.name);
+      <span className="text-sm text-[var(--muted)]">
+        ({reviewsCount} {reviewsCount === 1 ? "review" : "reviews"})
+      </span>
+    </div>
+  );
+}
 
-  const hasAdditionalInformation =
-    Boolean(place.cuisine) ||
-    Boolean(place.openingHours) ||
-    Boolean(place.internetAccess) ||
-    Boolean(place.wheelchair);
+export default function PlacePage() {
+  const params = useParams();
+  const id = params.id as string;
+
+  const [place, setPlace] = useState<Place | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (!id) return;
+
+    async function loadPlace() {
+      try {
+        setLoading(true);
+        setError("");
+
+        const response = await fetch(
+          `http://localhost:3001/places/${id}`,
+          {
+            cache: "no-store",
+          },
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to load place");
+        }
+
+        const result: Place = await response.json();
+
+        setPlace(result);
+      } catch (err) {
+        console.error(err);
+        setError("Unable to load this place.");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadPlace();
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[var(--background)]">
+        <section className="mx-auto max-w-7xl px-6 pb-16 pt-32 lg:px-8">
+          <div className="animate-pulse space-y-8">
+            <div className="h-5 w-32 rounded bg-[var(--secondary)]/10" />
+
+            <div className="aspect-[16/7] rounded-3xl bg-[var(--secondary)]/10" />
+
+            <div className="space-y-4">
+              <div className="h-10 w-2/3 rounded bg-[var(--secondary)]/10" />
+              <div className="h-5 w-1/3 rounded bg-[var(--secondary)]/10" />
+              <div className="h-24 w-full rounded bg-[var(--secondary)]/10" />
+            </div>
+          </div>
+        </section>
+      </div>
+    );
+  }
+
+  if (error || !place) {
+    return (
+      <div className="min-h-screen bg-[var(--background)]">
+        <section className="mx-auto max-w-3xl px-6 pb-16 pt-32 text-center lg:px-8">
+          <Link
+            href="/places"
+            className="mb-8 inline-flex items-center gap-2 text-sm font-semibold text-[var(--muted)] transition-colors hover:text-[var(--primary)]"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to places
+          </Link>
+
+          <div className="rounded-3xl border border-red-500/20 bg-red-500/5 p-10">
+            <h1 className="text-2xl font-bold text-[var(--foreground)]">
+              Place not found
+            </h1>
+
+            <p className="mt-2 text-sm text-[var(--muted)]">
+              {error || "We could not find this place."}
+            </p>
+          </div>
+        </section>
+      </div>
+    );
+  }
+
+  const placeIsArabic = isArabic(place.name);
+
+  const primaryImage =
+    place.images?.[0]?.url ?? place.images?.[0]?.imageUrl ?? null;
 
   return (
-    <main className="min-h-screen bg-[var(--background)] text-[var(--foreground)]">
-      <div className="mx-auto max-w-7xl px-5 py-8 sm:px-6 lg:px-8">
-
-        {/* Back */}
+    <div className="min-h-screen bg-[var(--background)]">
+      <main className="mx-auto max-w-7xl px-6 pb-20 pt-32 lg:px-8">
         <Link
-          href="/places"
-          className="group inline-flex items-center gap-2 text-sm font-semibold text-[var(--muted)] transition-all duration-300 hover:-translate-x-1 hover:text-[var(--primary)]"
+          href={
+            place.city?.id
+              ? `/cities/${place.city.id}`
+              : "/places"
+          }
+          className="mb-8 inline-flex items-center gap-2 text-sm font-semibold text-[var(--muted)] transition-colors hover:text-[var(--primary)]"
         >
-          <ArrowLeft
-            size={17}
-            className="transition-transform duration-300 group-hover:-translate-x-1"
-          />
-
-          Back to places
+          <ArrowLeft className="h-4 w-4" />
+          {place.city?.name
+            ? `Back to ${place.city.name}`
+            : "Back to places"}
         </Link>
 
         {/* Hero */}
-        <section className="mt-7 overflow-hidden rounded-[2rem] border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow)]">
-
-          <div className="relative flex h-72 items-center justify-center overflow-hidden bg-[var(--surface-soft)] sm:h-[420px]">
-
-            {image ? (
+        <section className="overflow-hidden rounded-3xl border border-[var(--border)] bg-[var(--card)] shadow-sm">
+          <div className="relative aspect-[16/7] overflow-hidden bg-[var(--secondary)]/10">
+            {primaryImage ? (
               <img
-                src={image}
+                src={primaryImage}
                 alt={place.name}
-                className="h-full w-full object-cover transition-transform duration-700 hover:scale-[1.02]"
+                className="h-full w-full object-cover"
               />
             ) : (
-              <div className="flex h-full w-full items-center justify-center bg-[var(--surface-soft)]">
-                <div className="flex h-24 w-24 items-center justify-center rounded-3xl bg-[var(--primary-soft)] text-[var(--primary)]">
-                  <MapPin size={44} />
-                </div>
+              <div className="flex h-full items-center justify-center">
+                <MapPin className="h-16 w-16 text-[var(--secondary)]/30" />
               </div>
             )}
 
-            <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-black/50 to-transparent" />
-
-          </div>
-
-          <div className="p-6 sm:p-8">
-
-            <div className="flex flex-wrap items-center gap-3">
-
-              <span className="rounded-full bg-[var(--primary-soft)] px-4 py-1.5 text-sm font-bold text-[var(--primary)]">
-                {place.category}
-              </span>
-
-              {place.city && (
-                <span className="flex items-center gap-1.5 text-sm font-medium text-[var(--muted)]">
-                  <MapPin size={15} />
-                  {place.city.name}, {place.city.country}
+            {place.category && (
+              <div className="absolute left-6 top-6">
+                <span className="rounded-full bg-[var(--card)]/90 px-4 py-2 text-sm font-bold capitalize text-[var(--secondary)] shadow-sm backdrop-blur-sm">
+                  {place.subtype
+                    ? `${place.category} · ${place.subtype.replaceAll("_", " ")}`
+                    : place.category}
                 </span>
-              )}
-
-            </div>
-
-            <h1
-              dir={arabicName ? "rtl" : "ltr"}
-              className={`mt-4 text-3xl tracking-tight sm:text-5xl ${
-                arabicName
-                  ? "font-arabic font-bold"
-                  : "font-black"
-              }`}
-            >
-              {place.name}
-            </h1>
-
-            {place.description &&
-              place.description !== "Imported from OpenStreetMap" && (
-                <p className="mt-4 max-w-3xl text-base leading-7 text-[var(--muted)]">
-                  {place.description}
-                </p>
-              )}
-
-            {/* Rating */}
-            <div className="mt-6 flex flex-wrap items-center gap-4">
-
-              <Stars rating={rating} />
-
-              <span className="font-bold">
-                {rating.toFixed(1)}
-              </span>
-
-              <span className="text-sm text-[var(--muted)]">
-                {reviewsCount}{" "}
-                {reviewsCount === 1
-                  ? "review"
-                  : "reviews"}
-              </span>
-
-            </div>
-
+              </div>
+            )}
           </div>
 
-        </section>
+          <div className="p-6 md:p-8">
+            <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+              <div className="max-w-3xl">
+                <h1
+                  dir={placeIsArabic ? "rtl" : "ltr"}
+                  className={`text-4xl tracking-tight text-[var(--foreground)] md:text-5xl ${
+                    placeIsArabic
+                      ? "font-arabic font-bold"
+                      : "font-black"
+                  }`}
+                >
+                  {place.name}
+                </h1>
 
-        {/* Main information */}
-        <section className="mt-8 grid gap-6 md:grid-cols-2">
-
-          {/* Location */}
-          <div className="rounded-[1.5rem] border border-[var(--border)] bg-[var(--surface)] p-6 shadow-[var(--shadow)]">
-
-            <div className="flex items-center gap-3">
-
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[var(--primary-soft)] text-[var(--primary)]">
-                <MapPin size={20} />
+                {place.city && (
+                  <Link
+                    href={`/cities/${place.city.id}`}
+                    className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-[var(--primary)] hover:underline"
+                  >
+                    <MapPin className="h-4 w-4" />
+                    {place.city.name}
+                  </Link>
+                )}
               </div>
 
-              <h2 className="text-lg font-black">
-                Location
-              </h2>
-
-            </div>
-
-            <div className="mt-6 grid gap-5 sm:grid-cols-2">
-
-              <div className="rounded-xl bg-[var(--surface-soft)] p-4">
-                <p className="text-xs font-bold uppercase tracking-wide text-[var(--muted)]">
-                  Latitude
-                </p>
-
-                <p className="mt-1 font-semibold">
-                  {place.latitude}
-                </p>
-              </div>
-
-              <div className="rounded-xl bg-[var(--surface-soft)] p-4">
-                <p className="text-xs font-bold uppercase tracking-wide text-[var(--muted)]">
-                  Longitude
-                </p>
-
-                <p className="mt-1 font-semibold">
-                  {place.longitude}
-                </p>
-              </div>
-
-            </div>
-
-            <a
-              href={`https://www.google.com/maps?q=${place.latitude},${place.longitude}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[var(--primary)] px-5 py-3 text-sm font-bold text-white shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
-            >
-              <Navigation size={16} />
-              Open in Google Maps
-            </a>
-
-          </div>
-
-          {/* Rating summary */}
-          <div className="rounded-[1.5rem] border border-[var(--border)] bg-[var(--surface)] p-6 shadow-[var(--shadow)]">
-
-            <div className="flex items-center gap-3">
-
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-400/10 text-amber-500">
-                <Star
-                  size={20}
-                  className="fill-current"
+              <div className="shrink-0">
+                <Rating
+                  rating={place.averageRating}
+                  reviewsCount={place.reviewsCount}
                 />
               </div>
-
-              <h2 className="text-lg font-black">
-                Rating overview
-              </h2>
-
             </div>
 
-            <div className="mt-6 flex items-center gap-5">
-
-              <div className="text-5xl font-black">
-                {rating.toFixed(1)}
-              </div>
-
-              <div>
-
-                <Stars rating={rating} />
-
-                <p className="mt-2 text-sm text-[var(--muted)]">
-                  Based on {reviewsCount}{" "}
-                  {reviewsCount === 1
-                    ? "review"
-                    : "reviews"}
-                </p>
-
-              </div>
-
-            </div>
-
-          </div>
-
-          {/* Address */}
-          {place.address && (
-            <div className="rounded-[1.5rem] border border-[var(--border)] bg-[var(--surface)] p-6 shadow-[var(--shadow)]">
-
-              <div className="flex items-center gap-3">
-
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[var(--primary-soft)] text-[var(--primary)]">
-                  <MapPin size={20} />
-                </div>
-
-                <h2 className="text-lg font-black">
-                  Address
-                </h2>
-
-              </div>
-
-              <p className="mt-5 text-sm leading-7 text-[var(--muted)]">
-                {place.address}
+            {place.description && (
+              <p className="mt-7 max-w-4xl text-base leading-8 text-[var(--muted)]">
+                {place.description}
               </p>
-
-            </div>
-          )}
-
-          {/* Contact */}
-          {(place.phone || place.website) && (
-            <div className="rounded-[1.5rem] border border-[var(--border)] bg-[var(--surface)] p-6 shadow-[var(--shadow)]">
-
-              <div className="flex items-center gap-3">
-
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[var(--primary-soft)] text-[var(--primary)]">
-                  <Phone size={20} />
-                </div>
-
-                <h2 className="text-lg font-black">
-                  Contact
-                </h2>
-
-              </div>
-
-              <div className="mt-5 space-y-4">
-
-                {place.phone && (
-                  <a
-                    href={`tel:${place.phone}`}
-                    className="flex items-center gap-3 text-sm text-[var(--muted)] transition-colors hover:text-[var(--primary)]"
-                  >
-                    <Phone size={16} />
-                    {place.phone}
-                  </a>
-                )}
-
-                {place.website && (
-                  <a
-                    href={cleanWebsiteUrl(place.website)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-3 text-sm text-[var(--muted)] transition-colors hover:text-[var(--primary)]"
-                  >
-                    <Globe size={16} />
-
-                    <span className="truncate">
-                      {formatWebsite(place.website)}
-                    </span>
-
-                    <ExternalLink size={14} />
-                  </a>
-                )}
-
-              </div>
-
-            </div>
-          )}
-
+            )}
+          </div>
         </section>
 
-        {/* OSM Details */}
-        {hasAdditionalInformation && (
-          <section className="mt-8">
+        {/* Information */}
+        <section className="mt-8 grid gap-8 lg:grid-cols-[1fr_1.4fr]">
+          <div className="rounded-3xl border border-[var(--border)] bg-[var(--card)] p-6 md:p-8">
+            <h2 className="text-2xl font-black text-[var(--foreground)]">
+              Information
+            </h2>
 
-            <div className="mb-6 flex items-center gap-3">
+            <div className="mt-7 space-y-6">
+              {place.address && (
+                <InfoRow
+                  icon={<MapPin className="h-5 w-5" />}
+                  label="Address"
+                >
+                  {place.address}
+                </InfoRow>
+              )}
 
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[var(--secondary)]/10 text-[var(--secondary)]">
-                <Compass size={21} />
-              </div>
+              {place.phone && (
+                <InfoRow
+                  icon={<Phone className="h-5 w-5" />}
+                  label="Phone"
+                >
+                  <a
+                    href={`tel:${place.phone}`}
+                    className="font-semibold hover:text-[var(--primary)]"
+                  >
+                    {place.phone}
+                  </a>
+                </InfoRow>
+              )}
 
-              <div>
-                <h2 className="text-2xl font-black">
-                  Place information
-                </h2>
-
-                <p className="text-sm text-[var(--muted)]">
-                  Additional information from OpenStreetMap.
-                </p>
-              </div>
-
-            </div>
-
-            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-
-              {place.cuisine && (
-                <div className="rounded-[1.5rem] border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow)]">
-
-                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[var(--secondary)]/10 text-[var(--secondary)]">
-                    <Utensils size={20} />
-                  </div>
-
-                  <p className="mt-4 text-xs font-bold uppercase tracking-wide text-[var(--muted)]">
-                    Cuisine
-                  </p>
-
-                  <p className="mt-1 font-bold capitalize">
-                    {place.cuisine}
-                  </p>
-
-                </div>
+              {place.website && (
+                <InfoRow
+                  icon={<Globe className="h-5 w-5" />}
+                  label="Website"
+                >
+                  <a
+                    href={place.website}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 font-semibold text-[var(--primary)] hover:underline"
+                  >
+                    Visit website
+                    <ExternalLink className="h-3.5 w-3.5" />
+                  </a>
+                </InfoRow>
               )}
 
               {place.openingHours && (
-                <div className="rounded-[1.5rem] border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow)]">
+                <InfoRow
+                  icon={<span className="text-lg">🕐</span>}
+                  label="Opening hours"
+                >
+                  {place.openingHours}
+                </InfoRow>
+              )}
 
-                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[var(--secondary)]/10 text-[var(--secondary)]">
-                    <Clock size={20} />
-                  </div>
-
-                  <p className="mt-4 text-xs font-bold uppercase tracking-wide text-[var(--muted)]">
-                    Opening hours
-                  </p>
-
-                  <p className="mt-1 text-sm font-bold leading-6">
-                    {formatOpeningHours(place.openingHours)}
-                  </p>
-
-                </div>
+              {place.cuisine && (
+                <InfoRow
+                  icon={<span className="text-lg">🍽️</span>}
+                  label="Cuisine"
+                >
+                  {place.cuisine}
+                </InfoRow>
               )}
 
               {place.internetAccess && (
-                <div className="rounded-[1.5rem] border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow)]">
-
-                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[var(--secondary)]/10 text-[var(--secondary)]">
-                    <Wifi size={20} />
-                  </div>
-
-                  <p className="mt-4 text-xs font-bold uppercase tracking-wide text-[var(--muted)]">
-                    Internet
-                  </p>
-
-                  <p className="mt-1 font-bold">
-                    {formatInternetAccess(place.internetAccess)}
-                  </p>
-
-                </div>
+                <InfoRow
+                  icon={<span className="text-lg">📶</span>}
+                  label="Internet"
+                >
+                  {place.internetAccess}
+                </InfoRow>
               )}
 
-              {place.wheelchair && (
-                <div className="rounded-[1.5rem] border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow)]">
-
-                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[var(--secondary)]/10 text-[var(--secondary)]">
-                    <Accessibility size={20} />
-                  </div>
-
-                  <p className="mt-4 text-xs font-bold uppercase tracking-wide text-[var(--muted)]">
-                    Accessibility
-                  </p>
-
-                  <p className="mt-1 text-sm font-bold">
-                    {formatWheelchair(place.wheelchair)}
-                  </p>
-
-                </div>
-              )}
-
+              {place.wheelchair !== null &&
+                place.wheelchair !== undefined && (
+                  <InfoRow
+                    icon={<span className="text-lg">♿</span>}
+                    label="Accessibility"
+                  >
+                    {place.wheelchair
+                      ? "Wheelchair accessible"
+                      : "Not listed as wheelchair accessible"}
+                  </InfoRow>
+                )}
             </div>
+          </div>
 
-          </section>
-        )}
-
-        {/* Reviews */}
-        <section className="mt-12">
-
-          <div className="mb-6 flex items-center gap-3">
-
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[var(--accent-soft)] text-[var(--accent)]">
-              <Compass size={21} />
-            </div>
-
-            <div>
-              <h2 className="text-2xl font-black">
-                Visitor experiences
+          {/* Map */}
+          <div className="overflow-hidden rounded-3xl border border-[var(--border)] bg-[var(--card)]">
+            <div className="border-b border-[var(--border)] p-6">
+              <h2 className="text-2xl font-black text-[var(--foreground)]">
+                Location
               </h2>
 
-              <p className="text-sm text-[var(--muted)]">
-                See what other visitors think about this place.
+              <p className="mt-1 text-sm text-[var(--muted)]">
+                {place.latitude}, {place.longitude}
               </p>
             </div>
 
-          </div>
+            <div className="flex min-h-[320px] items-center justify-center bg-[var(--secondary)]/5 p-8">
+              <div className="text-center">
+                <MapPin className="mx-auto h-12 w-12 text-[var(--primary)]" />
 
+                <p className="mt-4 font-bold text-[var(--foreground)]">
+                  {place.city?.name ?? "Location"}
+                </p>
+
+                <p className="mt-1 text-sm text-[var(--muted)]">
+                  Coordinates available
+                </p>
+
+                <a
+                  href={`https://www.google.com/maps/search/?api=1&query=${place.latitude},${place.longitude}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-5 inline-flex items-center gap-2 rounded-xl bg-[var(--primary)] px-4 py-2.5 text-sm font-bold text-white transition hover:opacity-90"
+                >
+                  Open in Google Maps
+                  <ExternalLink className="h-4 w-4" />
+                </a>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Reviews */}
+        <section className="mt-16">
           <PlaceReviews
             placeId={place.id}
             initialReviews={place.reviews ?? []}
           />
-
         </section>
-
-      </div>
-    </main>
+      </main>
+    </div>
   );
 }

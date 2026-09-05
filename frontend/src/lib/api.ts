@@ -6,6 +6,33 @@ export type User = {
   name: string;
 };
 
+export type CitySummary = {
+  id: string;
+  name: string;
+  country: string;
+  description?: string | null;
+  image?: string | null;
+  featured?: boolean;
+  featuredOrder?: number | null;
+  _count?: {
+    places: number;
+  };
+};
+
+export type FeaturedCity = CitySummary & {
+  description: string;
+  image: string;
+  featuredOrder: number;
+};
+
+export type CitiesResponse = {
+  data: CitySummary[];
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+};
+
 export type LoginResponse = {
   access_token: string;
   user: User;
@@ -26,10 +53,61 @@ export type Review = {
   };
 };
 
+export type PlaceSummary = {
+  id: string;
+  osmId: string | null;
+  name: string;
+  description: string;
+  category: string;
+  subtype: string | null;
+  address: string | null;
+  latitude: string;
+  longitude: string;
+  cityId: string;
+  createdAt: string;
+  updatedAt: string;
+  city: {
+    id: string;
+    name: string;
+    country: string;
+  };
+};
 
-export async function getCities() {
+export type PlacesResponse = {
+  data: PlaceSummary[];
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+};
+
+export type CityPlacesResponse = {
+  city: Pick<CitySummary, "id" | "name">;
+  data: PlaceSummary[];
+  categories: string[];
+  subtypes: Array<{ category: string; value: string }>;
+  pagination: {
+    total: number;
+    limit: number;
+    offset: number;
+    hasMore: boolean;
+    currentPage: number;
+    totalPages: number;
+  };
+  filters: {
+    category: string | null;
+    subtype: string | null;
+    search: string | null;
+    sort: string;
+  };
+};
+
+export async function getCities(
+  page = 1,
+  limit = 12,
+): Promise<CitiesResponse> {
   const res = await fetch(
-    `${API_URL}/cities`,
+    `${API_URL}/cities?page=${page}&limit=${limit}`,
     {
       cache: "no-store",
     },
@@ -43,7 +121,7 @@ export async function getCities() {
 }
 
 
-export async function getFeaturedCities() {
+export async function getFeaturedCities(): Promise<FeaturedCity[]> {
   const res = await fetch(
     `${API_URL}/cities/featured`,
     {
@@ -73,17 +151,90 @@ export async function getCity(id: string) {
   return res.json();
 }
 
-
-export async function getPlaces() {
-  const res = await fetch(`${API_URL}/places`, {
-    cache: "no-store",
+export async function getCityPlaces(
+  id: string,
+  page = 1,
+  limit = 24,
+  query: PlacesQuery = {},
+): Promise<CityPlacesResponse> {
+  const params = new URLSearchParams({
+    page: String(page),
+    limit: String(limit),
   });
+
+  params.set("offset", String(Math.max(0, (page - 1) * limit)));
+
+  Object.entries(query).forEach(([key, value]) => {
+    if (value?.trim()) {
+      params.set(key, value.trim());
+    }
+  });
+
+  const res = await fetch(
+    `${API_URL}/cities/${id}/places?${params.toString()}`,
+    { cache: "no-store" },
+  );
+
+  if (!res.ok) {
+    throw new Error("Failed to fetch city places");
+  }
+
+  return res.json();
+}
+
+
+export type PlacesQuery = {
+  city?: string;
+  category?: string;
+  subtype?: string;
+  search?: string;
+  sort?: string;
+};
+
+export async function getPlaces(
+  page = 1,
+  limit = 24,
+  query: PlacesQuery = {},
+): Promise<PlacesResponse> {
+  const params = new URLSearchParams({
+    page: String(page),
+    limit: String(limit),
+  });
+
+  Object.entries(query).forEach(([key, value]) => {
+    if (value?.trim()) {
+      params.set(key, value.trim());
+    }
+  });
+
+  const res = await fetch(
+    `${API_URL}/places?${params.toString()}`,
+    {
+      cache: "no-store",
+    },
+  );
 
   if (!res.ok) {
     throw new Error("Failed to fetch places");
   }
 
   return res.json();
+}
+
+export async function getPlaceFilters(city?: string) {
+  const params = city ? `?city=${encodeURIComponent(city)}` : "";
+  const res = await fetch(`${API_URL}/places/filters${params}`, {
+    cache: "no-store",
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to fetch place filters");
+  }
+
+  return res.json() as Promise<{
+    categories: string[];
+    subtypes: Array<{ category: string; value: string }>;
+  }>;
 }
 
 

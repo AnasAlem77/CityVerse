@@ -14,15 +14,16 @@ export default async function SearchPage({
   const params = await searchParams;
   const query = params.q?.trim() ?? "";
 
-  const [cities, places] = await Promise.all([
-    getCities(),
-    getPlaces(),
+  const [cities, placesResult] = await Promise.all([
+    getCities(1, 100),
+    getPlaces(1, 24, { search: query }),
   ]);
+  const places = placesResult.data;
 
   const normalizedQuery = query.toLowerCase();
 
   const matchingCities = query
-    ? cities.filter((city: any) => {
+    ? cities.data.filter((city) => {
         const text = [
           city.name,
           city.country,

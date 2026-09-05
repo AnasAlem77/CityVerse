@@ -46,6 +46,63 @@ model City {
   updatedAt DateTime @updatedAt
 
   places Place[]
+  rawPlaces RawPlace[]
+  curatedPlaces CuratedPlace[]
+}
+
+// Immutable-source staging records for future wide-area collection and dry runs.
+// The existing Place table remains the production dataset.
+model RawPlace {
+  id String @id @default(cuid())
+
+  osmId   String
+  cityId  String
+  name    String
+  category String
+  subtype String?
+  rawTags Json
+
+  description String
+  address String?
+  website String?
+  phone String?
+  openingHours String?
+  cuisine String?
+  wheelchair String?
+  internetAccess String?
+
+  latitude  Decimal @db.Decimal(9, 6)
+  longitude Decimal @db.Decimal(9, 6)
+  qualityScore Int @default(0)
+  collectedAt DateTime @default(now())
+
+  city City @relation(fields: [cityId], references: [id], onDelete: Cascade)
+  curatedPlace CuratedPlace?
+
+  @@unique([cityId, osmId])
+  @@index([cityId, category, subtype])
+}
+
+model CuratedPlace {
+  id String @id @default(cuid())
+
+  rawPlaceId String @unique
+  cityId String
+  qualityScore Int
+  importanceScore Int
+  completenessScore Int
+  geographicScore Int
+  diversityScore Int
+  totalScore Int
+  tier String
+  curationVersion String
+  selectionReason String
+  selectedAt DateTime @default(now())
+
+  rawPlace RawPlace @relation(fields: [rawPlaceId], references: [id], onDelete: Cascade)
+  city City @relation(fields: [cityId], references: [id], onDelete: Cascade)
+
+  @@index([cityId, qualityScore])
 }
 
 model Place {
@@ -57,6 +114,7 @@ model Place {
   name          String
   description   String
   category      String
+  subtype       String?
 
   address       String?
   website       String?
@@ -81,6 +139,8 @@ model Place {
   savedPlaces SavedPlace[]
 
   reviews Review[]
+
+  @@index([cityId, category, subtype])
 }
 
 model PlaceImage {

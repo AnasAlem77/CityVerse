@@ -24,8 +24,19 @@ export class CitiesController {
 
   // Public
   @Get()
-  getCities() {
-    return this.citiesService.getCities();
+  getCities(
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    const parsedPage = Number.parseInt(page ?? '1', 10);
+    const parsedLimit = Number.parseInt(limit ?? '12', 10);
+
+    return this.citiesService.getCities(
+      Number.isFinite(parsedPage) && parsedPage > 0 ? parsedPage : 1,
+      Number.isFinite(parsedLimit) && parsedLimit > 0
+        ? Math.min(parsedLimit, 100)
+        : 12,
+    );
   }
 
   // Public - Featured cities for Hero slider
@@ -47,7 +58,9 @@ export class CitiesController {
   getCityPlaces(
     @Param('id') id: string,
     @Query('category') category?: string,
+    @Query('subtype') subtype?: string,
     @Query('search') search?: string,
+    @Query('sort') sort?: string,
     @Query('limit') limit?: string,
     @Query('offset') offset?: string,
   ) {
@@ -55,7 +68,9 @@ export class CitiesController {
       id,
       {
         category,
+        subtype,
         search,
+        sort,
         limit: limit ? Number(limit) : undefined,
         offset: offset ? Number(offset) : undefined,
       },
