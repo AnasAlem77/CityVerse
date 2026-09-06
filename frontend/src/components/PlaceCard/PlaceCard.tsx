@@ -17,6 +17,7 @@ type PlaceCardProps = {
   subtype?: string | null;
   address?: string | null;
   averageRating?: number;
+  cityVerseScore?: number;
 };
 
 export default function PlaceCard({
@@ -27,6 +28,7 @@ export default function PlaceCard({
   subtype,
   address,
   averageRating = 0,
+  cityVerseScore = 0,
 }: PlaceCardProps) {
   const arabic = isArabic(name);
 
@@ -159,7 +161,7 @@ export default function PlaceCard({
         </div>
 
         {/* Rating badge */}
-        {averageRating > 0 && (
+        {cityVerseScore > 0 && (
           <div
             className="
               absolute
@@ -184,7 +186,7 @@ export default function PlaceCard({
               className="fill-yellow-400 text-yellow-400"
             />
 
-            {Number(averageRating).toFixed(1)}
+            {Number(cityVerseScore).toFixed(1)}
           </div>
         )}
       </div>
@@ -276,10 +278,6 @@ export default function PlaceCard({
         )}
 
         {/* Rating */}
-        <div className="mt-4">
-          <Rating value={averageRating} />
-        </div>
-
         {/* Bottom */}
         <div className="mt-6 flex items-center justify-between">
           <span className="text-sm font-bold text-[var(--foreground)]">

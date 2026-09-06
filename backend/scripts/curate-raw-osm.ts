@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { CurationService } from '../src/places/curation.service';
 import { PrismaService } from '../src/prisma/prisma.service';
 

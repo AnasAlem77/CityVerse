@@ -17,7 +17,10 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json"
+    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "google:match": "tsx scripts/google-match.ts",
+    "photos:acquire": "tsx scripts/acquire-curated-photos.ts",
+    "scores:populate": "tsx scripts/populate-cityverse-scores.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
@@ -76,6 +79,9 @@
     "testRegex": ".*\\.spec\\.ts$",
     "transform": {
       "^.+\\.(t|j)s$": "ts-jest"
+    },
+    "moduleNameMapper": {
+      "^(.*)\\.js$": "$1"
     },
     "collectCoverageFrom": [
       "**/*.(t|j)s"

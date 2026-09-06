@@ -191,6 +191,7 @@ export default async function PlacesPage({
                   address={place.address}
                   category={place.category}
                   subtype={place.subtype}
+                  cityVerseScore={place.cityVerseScore}
                 />
               ))}
             </div>

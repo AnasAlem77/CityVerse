@@ -5,18 +5,13 @@ import { PrismaService } from '../prisma/prisma.service';
 
 import { CreateCityDto } from './dto/create-city.dto';
 import { UpdateCityDto } from './dto/update-city.dto';
+import { calculateCityVerseScore } from '../places/cityverse-score';
 
-type PlacesSort =
-  | 'name_asc'
-  | 'name_desc'
-  | 'newest'
-  | 'most_reviewed';
+type PlacesSort = 'name_asc' | 'name_desc' | 'newest' | 'most_reviewed';
 
 @Injectable()
 export class CitiesService {
-  constructor(
-    private readonly prisma: PrismaService,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   async createCity(data: CreateCityDto) {
     return this.prisma.city.create({
@@ -31,6 +26,7 @@ export class CitiesService {
 
         latitude: data.latitude,
         longitude: data.longitude,
+        timezone: data.timezone,
       },
     });
   }
@@ -45,10 +41,7 @@ export class CitiesService {
       this.prisma.city.findMany({
         skip,
         take: safeLimit,
-        orderBy: [
-          { name: 'asc' },
-          { id: 'asc' },
-        ],
+        orderBy: [{ name: 'asc' }, { id: 'asc' }],
         include: {
           _count: {
             select: {
@@ -129,6 +122,9 @@ export class CitiesService {
       select: {
         id: true,
         name: true,
+        timezone: true,
+        latitude: true,
+        longitude: true,
       },
     });
 
@@ -136,15 +132,9 @@ export class CitiesService {
       throw new NotFoundException('City not found');
     }
 
-    const limit = Math.min(
-      Math.max(filters.limit ?? 12, 1),
-      100,
-    );
+    const limit = Math.min(Math.max(filters.limit ?? 12, 1), 100);
 
-    const offset = Math.max(
-      filters.offset ?? 0,
-      0,
-    );
+    const offset = Math.max(filters.offset ?? 0, 0);
 
     const sort: PlacesSort =
       filters.sort === 'name_desc' ||
@@ -206,90 +196,87 @@ export class CitiesService {
                 },
               ];
 
-    const [places, total, categories, subtypes] =
-      await Promise.all([
-        this.prisma.place.findMany({
-          where,
+    const [places, total, categories, subtypes] = await Promise.all([
+      this.prisma.place.findMany({
+        where,
 
-          orderBy,
+        orderBy,
 
-          skip: offset,
-          take: limit,
+        skip: offset,
+        take: limit,
 
-          select: {
-            id: true,
-            osmId: true,
+        select: {
+          id: true,
+          osmId: true,
 
-            name: true,
-            description: true,
-            category: true,
-            subtype: true,
+          name: true,
+          description: true,
+          category: true,
+          subtype: true,
 
-            address: true,
-            website: true,
-            phone: true,
-            openingHours: true,
-            cuisine: true,
-            wheelchair: true,
-            internetAccess: true,
+          address: true,
+          website: true,
+          phone: true,
+          openingHours: true,
+          cuisine: true,
+          wheelchair: true,
+          internetAccess: true,
 
-            latitude: true,
-            longitude: true,
+          latitude: true,
+          longitude: true,
 
-            cityId: true,
+          cityId: true,
 
-            createdAt: true,
-            updatedAt: true,
+          createdAt: true,
+          updatedAt: true,
 
-            _count: {
-              select: {
-                reviews: true,
-              },
+          _count: {
+            select: {
+              reviews: true,
             },
           },
-        }),
+        },
+      }),
 
-        this.prisma.place.count({
-          where,
-        }),
+      this.prisma.place.count({
+        where,
+      }),
 
-        this.prisma.place.findMany({
-          where: {
-            cityId,
+      this.prisma.place.findMany({
+        where: {
+          cityId,
+        },
+
+        distinct: ['category'],
+
+        select: {
+          category: true,
+        },
+
+        orderBy: {
+          category: 'asc',
+        },
+      }),
+
+      this.prisma.place.findMany({
+        where: {
+          cityId,
+          subtype: {
+            not: null,
           },
-
-          distinct: ['category'],
-
-          select: {
-            category: true,
-          },
-
-          orderBy: {
-            category: 'asc',
-          },
-        }),
-
-        this.prisma.place.findMany({
-          where: {
-            cityId,
-            subtype: {
-              not: null,
-            },
-          },
-          distinct: ['category', 'subtype'],
-          select: {
-            category: true,
-            subtype: true,
-          },
-          orderBy: [
-            { category: 'asc' },
-            { subtype: 'asc' },
-          ],
-        }),
-      ]);
+        },
+        distinct: ['category', 'subtype'],
+        select: {
+          category: true,
+          subtype: true,
+        },
+        orderBy: [{ category: 'asc' }, { subtype: 'asc' }],
+      }),
+    ]);
 
     const data = places.map((place) => ({
       ...place,
+      cityVerseScore: Number(calculateCityVerseScore(place).toFixed(1)),
 
       reviewsCount: place._count.reviews,
 
@@ -303,9 +290,7 @@ export class CitiesService {
 
       data,
 
-      categories: categories
-        .map((item) => item.category)
-        .filter(Boolean),
+      categories: categories.map((item) => item.category).filter(Boolean),
 
       subtypes: subtypes
         .filter((item) => item.subtype)
@@ -319,10 +304,8 @@ export class CitiesService {
         limit,
         offset,
         hasMore: offset + places.length < total,
-        currentPage:
-          Math.floor(offset / limit) + 1,
-        totalPages:
-          Math.ceil(total / limit),
+        currentPage: Math.floor(offset / limit) + 1,
+        totalPages: Math.ceil(total / limit),
       },
 
       filters: {
@@ -334,10 +317,7 @@ export class CitiesService {
     };
   }
 
-  async updateCity(
-    id: string,
-    data: UpdateCityDto,
-  ) {
+  async updateCity(id: string, data: UpdateCityDto) {
     return this.prisma.city.update({
       where: {
         id,

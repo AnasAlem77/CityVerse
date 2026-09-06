@@ -1,0 +1,2 @@
+export type WeatherSnapshot = { cityId: string; provider: string; available: boolean; fetchedAt: string; current?: { temperatureC: number; feelsLikeC?: number; condition: string; humidity?: number; windSpeedKph?: number; precipitationMm?: number; sunrise?: string; sunset?: string }; forecast?: Array<{ date: string; minC?: number; maxC?: number; condition: string; precipitationProbability?: number }>; reason?: string };
+export interface WeatherProvider { getWeather(latitude: number, longitude: number): Promise<Omit<WeatherSnapshot, 'cityId'>>; }

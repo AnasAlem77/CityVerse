@@ -11,6 +11,8 @@
 ============================================================ */
 
 :root {
+  --font-inter: "Trebuchet MS", sans-serif;
+  --font-arabic: "Noto Sans Arabic", "Segoe UI", sans-serif;
   --background: #f8f7f2;
   --foreground: #171717;
 

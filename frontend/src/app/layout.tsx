@@ -1,28 +1,10 @@
 import type { Metadata } from "next";
 
-import {
-  Inter,
-  Noto_Kufi_Arabic,
-} from "next/font/google";
-
 import "./globals.css";
 
 import Navbar from "@/components/Navbar/Navbar";
 import Footer from "@/components/Footer/Footer";
 import ThemeProvider from "@/components/ThemeProvider/ThemeProvider";
-
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
-  display: "swap",
-});
-
-const notoKufiArabic = Noto_Kufi_Arabic({
-  variable: "--font-arabic",
-  subsets: ["arabic"],
-  display: "swap",
-  weight: ["400", "500", "600", "700"],
-});
 
 export const metadata: Metadata = {
   title: "CityVerse",
@@ -40,7 +22,7 @@ export default function RootLayout({
       lang="en"
       dir="ltr"
       suppressHydrationWarning
-      className={`${inter.variable} ${notoKufiArabic.variable}`}
+      className="font-sans"
     >
       <body className="min-h-screen">
         <ThemeProvider>

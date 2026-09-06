@@ -2,6 +2,9 @@ import Link from "next/link";
 import { ArrowLeft, MapPin, Star } from "lucide-react";
 
 import { getCityPlaces, PlacesQuery, PlaceSummary } from "@/lib/api";
+import LiveCityTime from "@/components/LiveCityTime/LiveCityTime";
+import CityWeather from "@/components/CityWeather/CityWeather";
+import CityMap from "@/components/CityMap/CityMapLoader";
 
 const PAGE_SIZE = 24;
 
@@ -78,8 +81,12 @@ export default async function CityPage({ params, searchParams }: { params: Promi
         <div className="mb-8">
           <Link href="/cities" className="mb-6 inline-flex items-center gap-2 text-sm font-semibold text-[var(--muted)] transition-colors hover:text-[var(--primary)]"><ArrowLeft className="h-4 w-4" />Back to cities</Link>
           <h1 dir={cityIsArabic ? "rtl" : "ltr"} className={`text-4xl tracking-tight text-[var(--foreground)] md:text-5xl ${cityIsArabic ? "font-arabic font-bold" : "font-black"}`}>{result.city.name}</h1>
+          <div className="mt-3"><LiveCityTime timezone={result.city.timezone} /></div>
           <p className="mt-3 max-w-2xl text-base leading-7 text-[var(--muted)]">Explore places, restaurants, attractions and other points of interest in this city.</p>
+          <div className="mt-5 max-w-xl"><CityWeather cityId={result.city.id} /></div>
         </div>
+
+        <section className="mb-10"><div className="mb-4"><p className="text-sm font-semibold uppercase tracking-wide text-[var(--primary)]">City map</p><h2 className="mt-1 text-2xl font-black text-[var(--foreground)]">Explore by location</h2></div><CityMap cityId={result.city.id} latitude={Number(result.city.latitude)} longitude={Number(result.city.longitude)} category={query.category} /></section>
 
         <form className="mb-10 grid gap-3 rounded-3xl border border-[var(--border)] bg-[var(--card)] p-5 md:grid-cols-4" method="get">
           <input name="search" defaultValue={query.search} placeholder="Search this city" className="rounded-2xl border border-[var(--border)] bg-transparent px-4 py-3 text-sm outline-none focus:border-[var(--primary)]" />

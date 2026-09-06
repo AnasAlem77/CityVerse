@@ -13,6 +13,8 @@ import {
 } from "lucide-react";
 
 import PlaceReviews from "@/components/PlaceReviews/PlaceReviews";
+import PlaceRating from "@/components/PlaceRating/PlaceRating";
+import Directions from "@/components/Directions/DirectionsLoader";
 
 type City = {
   id: string;
@@ -60,6 +62,7 @@ type Place = {
   reviews: Review[];
   reviewsCount: number;
   averageRating: number;
+  cityVerseScore?: number;
 };
 
 function isArabic(text: string) {
@@ -286,10 +289,16 @@ export default function PlacePage() {
               </div>
 
               <div className="shrink-0">
+                {place.cityVerseScore ? <div className="mb-3 text-right">
+                  <div className="text-lg font-bold text-[var(--foreground)]">★ {(place.cityVerseScore ?? 0).toFixed(1)}</div>
+                  <div className="text-xs text-[var(--muted)]">CityVerse Score</div>
+                  <div className="text-xs text-[var(--muted)]">Based on place data and available signals</div>
+                </div> : null}
                 <Rating
                   rating={place.averageRating}
                   reviewsCount={place.reviewsCount}
                 />
+                <PlaceRating placeId={place.id} />
               </div>
             </div>
 
@@ -298,6 +307,7 @@ export default function PlacePage() {
                 {place.description}
               </p>
             )}
+            <Directions destination={{ latitude: Number(place.latitude), longitude: Number(place.longitude) }} />
           </div>
         </section>
 

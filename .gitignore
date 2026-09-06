@@ -15,3 +15,9 @@ build/
 
 # Logs
 *.log
+
+.cityverse-backups/
+
+frontend/src/app/places/[id]/page.tsx.backup
+
+/frontend/src/app/places/\[id\]/page.tsx.backup

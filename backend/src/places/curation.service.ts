@@ -12,14 +12,6 @@ export const DEFAULT_CURATED_QUOTAS = {
   university: 5,
 } as const;
 
-export const CITY_CURATED_QUOTAS: Record<string, Record<string, number>> = {
-  Jakarta: { restaurant: 250, shop: 350, hotel: 120, attraction: 80, hospital: 40, university: 60 },
-  Bali: { restaurant: 250, shop: 250, hotel: 180, attraction: 120, hospital: 30, university: 30 },
-  Paris: { restaurant: 350, shop: 500, hotel: 180, attraction: 150, hospital: 40, university: 60 },
-  Dubai: { restaurant: 300, shop: 400, hotel: 180, attraction: 100, hospital: 50, university: 50 },
-  Tokyo: { restaurant: 350, shop: 500, hotel: 180, attraction: 150, hospital: 80, university: 80 },
-};
-
 type Candidate = {
   id: string;
   osmId: string | null;
@@ -40,63 +32,123 @@ type Candidate = {
   rawTags?: unknown;
 };
 
-const CURATION_VERSION = '20260905-v3';
+const CURATION_VERSION = '20260906-v1';
+// Balancing may reorder candidates above this floor, but cannot promote a
+// minimally tagged record into the curated set.
 const MINIMUM_SCORE = 35;
+const HARD_CITY_MAX = 8000;
+const CATEGORY_USEFULNESS: Record<string, number> = {
+  attraction: 1.35,
+  hotel: 1.15,
+  hospital: 1.05,
+  university: 1.05,
+  restaurant: 0.95,
+  shop: 0.75,
+  default: 0.6,
+};
 
 function tagsOf(candidate: Candidate) {
   return candidate.rawTags && typeof candidate.rawTags === 'object'
-    ? candidate.rawTags as Record<string, unknown>
+    ? (candidate.rawTags as Record<string, unknown>)
     : {};
 }
 
-function scoreCandidate(candidate: Candidate) {
-  const tags = tagsOf(candidate);
-  const has = (...keys: string[]) => keys.some((key) => Boolean(tags[key]));
-  const qualityScore = [
-    candidate.name.trim().length >= 3,
-    Number.isFinite(Number(candidate.latitude)) && Number.isFinite(Number(candidate.longitude)),
-    Boolean(candidate.category),
-    Boolean(candidate.subtype),
-    Boolean(candidate.address),
-    Boolean(candidate.website),
-    Boolean(candidate.phone),
-    Boolean(candidate.openingHours),
-  ].filter(Boolean).length * 3;
-  const importanceScore = Math.min(25, (
-    (has('tourism') ? 6 : 0) +
-    (has('historic', 'landmark', 'memorial') ? 7 : 0) +
-    (has('wikidata', 'wikipedia') ? 5 : 0) +
-    (['hospital', 'university', 'hotel'].includes(candidate.category) ? 5 : 0) +
-    (has('building', 'operator') ? 2 : 0)
-  ));
-  const completenessScore = Math.min(20, (
-    (candidate.address ? 5 : 0) +
-    (candidate.website ? 4 : 0) +
-    (candidate.phone ? 3 : 0) +
-    (candidate.openingHours ? 3 : 0) +
-    (candidate.cuisine ? 3 : 0) +
-    (candidate.wheelchair ? 1 : 0) +
-    (candidate.internetAccess ? 1 : 0)
-  ));
-  const relevanceScore = Math.min(15, (
-    ({ attraction: 15, hotel: 12, hospital: 12, university: 12, restaurant: 10, shop: 7 } as Record<string, number>)[candidate.category] ?? 4
-  ) + (candidate.subtype ? 2 : 0));
-  const baseScore = Math.min(80, qualityScore + importanceScore + completenessScore + relevanceScore);
-  const tier = baseScore >= 65 || importanceScore >= 18
-    ? 'TIER_1'
-    : baseScore >= 50
-      ? 'TIER_2'
-      : baseScore >= MINIMUM_SCORE
-        ? 'TIER_3'
-        : 'TIER_4';
-  return { qualityScore, importanceScore, completenessScore, relevanceScore, baseScore, tier };
+function decimalToNumber(value: Prisma.Decimal) {
+  return Number(value);
 }
 
-function cellKey(candidate: Candidate) {
-  const latitude = Number(candidate.latitude);
-  const longitude = Number(candidate.longitude);
+function cellKey(candidate: Candidate, tileDegrees = 0.05) {
+  const latitude = decimalToNumber(candidate.latitude);
+  const longitude = decimalToNumber(candidate.longitude);
+  return `${Math.floor(latitude / tileDegrees)},${Math.floor(longitude / tileDegrees)}`;
+}
 
-  return `${Math.floor(latitude / 0.02)},${Math.floor(longitude / 0.02)}`;
+function categoryWeight(category: string) {
+  return CATEGORY_USEFULNESS[category] ?? CATEGORY_USEFULNESS.default;
+}
+
+export function scoreRawCandidate(candidate: Candidate) {
+  const tags = tagsOf(candidate);
+  const has = (...keys: string[]) => keys.some((key) => Boolean(tags[key]));
+  const name = candidate.name.trim();
+  const description = candidate.description.trim();
+  const qualityScore =
+    (name.length >= 3 ? 8 : 0) +
+    (name.length >= 8 ? 3 : 0) +
+    (description.length >= 16 ? 3 : 0) +
+    (Number.isFinite(decimalToNumber(candidate.latitude)) &&
+    Number.isFinite(decimalToNumber(candidate.longitude))
+      ? 7
+      : 0) +
+    (Boolean(candidate.category) ? 4 : 0) +
+    (Boolean(candidate.subtype) ? 1 : 0) +
+    (Boolean(candidate.osmId) ? 5 : 0);
+  const importanceScore = Math.min(
+    28,
+    (has('tourism', 'attraction') ? 7 : 0) +
+      (has(
+        'historic',
+        'landmark',
+        'memorial',
+        'museum',
+        'castle',
+        'monument',
+        'archaeological_site',
+      )
+        ? 8
+        : 0) +
+      (has('wikidata', 'wikipedia') ? 6 : 0) +
+      (has('operator', 'official_name', 'brand', 'network') ? 3 : 0) +
+      (has('information', 'public_transport') ? 2 : 0) +
+      (['hospital', 'university', 'hotel'].includes(candidate.category)
+        ? 4
+        : 0),
+  );
+  const completenessScore = Math.min(
+    12,
+    (candidate.address ? 2 : 0) +
+      (candidate.website ? 2 : 0) +
+      (candidate.phone ? 2 : 0) +
+      (candidate.openingHours ? 2 : 0) +
+      (candidate.cuisine ? 2 : 0) +
+      (candidate.wheelchair ? 1 : 0) +
+      (candidate.internetAccess ? 1 : 0),
+  );
+  const relevanceScore = Math.min(
+    20,
+    ((
+      {
+        attraction: 18,
+        hotel: 15,
+        hospital: 15,
+        university: 15,
+        restaurant: 12,
+        shop: 9,
+      } as Record<string, number>
+    )[candidate.category] ?? 5) +
+      (candidate.subtype ? 2 : 0) +
+      (has('shop') ? 1 : 0),
+  );
+  const baseScore = Math.min(
+    90,
+    qualityScore + importanceScore + completenessScore + relevanceScore,
+  );
+  const tier =
+    baseScore >= 75 || importanceScore >= 18
+      ? 'TIER_1'
+      : baseScore >= 55
+        ? 'TIER_2'
+        : baseScore >= MINIMUM_SCORE
+          ? 'TIER_3'
+          : 'TIER_4';
+  return {
+    qualityScore,
+    importanceScore,
+    completenessScore,
+    relevanceScore,
+    baseScore,
+    tier,
+  };
 }
 
 function qualityScore(candidate: Candidate) {
@@ -119,12 +171,13 @@ export class CurationService {
   async curateRawCity(cityId: string) {
     const city = await this.prisma.city.findUnique({
       where: { id: cityId },
-      select: { id: true, name: true },
+      select: { id: true, name: true, latitude: true, longitude: true },
     });
     if (!city) throw new NotFoundException('City not found');
 
-    const quotas = CITY_CURATED_QUOTAS[city.name] ?? DEFAULT_CURATED_QUOTAS;
     const coverage = getCityCoverage(city.name);
+    const tileDegrees = coverage?.tileDegrees ?? 0.05;
+    const selectionLimit = HARD_CITY_MAX;
     const selected: Array<{
       rawPlaceId: string;
       cityId: string;
@@ -139,91 +192,178 @@ export class CurationService {
       selectionReason: string;
     }> = [];
 
-    for (const [category, quota] of Object.entries(quotas)) {
-      const candidates = await this.prisma.rawPlace.findMany({
-        where: {
-          cityId,
-          category,
-          name: { not: '' },
-          OR: [
-            { subtype: null },
-            { NOT: [{ subtype: 'vacant' }, { subtype: 'yes' }] },
-          ],
-        },
-        select: {
-          id: true,
-          osmId: true,
-          name: true,
-          description: true,
-          category: true,
-          subtype: true,
-          address: true,
-          website: true,
-          phone: true,
-          openingHours: true,
-          cuisine: true,
-          wheelchair: true,
-          internetAccess: true,
-          latitude: true,
-          longitude: true,
-          cityId: true,
-          rawTags: true,
-        },
-      });
-      const eligible = candidates
-        .map((candidate) => ({ candidate, score: scoreCandidate(candidate) }))
-        .filter((item) => {
-          const latitude = Number(item.candidate.latitude);
-          const longitude = Number(item.candidate.longitude);
-          const inCoverage = coverage
-            ? latitude >= coverage.south && latitude <= coverage.north && longitude >= coverage.west && longitude <= coverage.east
-            : true;
-          return item.score.tier !== 'TIER_4' && inCoverage;
-        })
-        .sort((left, right) => right.score.baseScore - left.score.baseScore || left.candidate.id.localeCompare(right.candidate.id));
-      const target = Math.min(quota, eligible.length);
-      const subtypeCap = Math.max(3, Math.ceil(Math.max(target, 1) * 0.3));
-      const subtypeCounts = new Map<string, number>();
-      const cells = new Map<string, number>();
-      const chosenIds = new Set<string>();
-      let categorySelected = 0;
-      const cellLeaders = new Map<string, (typeof eligible)[number]>();
+    const candidates = await this.prisma.rawPlace.findMany({
+      where: {
+        cityId,
+        name: { not: '' },
+        OR: [
+          { subtype: null },
+          { NOT: [{ subtype: 'vacant' }, { subtype: 'yes' }] },
+        ],
+      },
+      select: {
+        id: true,
+        osmId: true,
+        name: true,
+        description: true,
+        category: true,
+        subtype: true,
+        address: true,
+        website: true,
+        phone: true,
+        openingHours: true,
+        cuisine: true,
+        wheelchair: true,
+        internetAccess: true,
+        latitude: true,
+        longitude: true,
+        cityId: true,
+        rawTags: true,
+      },
+    });
 
-      for (const item of eligible) {
-        const cell = `${Math.floor(Number(item.candidate.latitude) / 0.05)},${Math.floor(Number(item.candidate.longitude) / 0.05)}`;
-        if (!cellLeaders.has(cell)) cellLeaders.set(cell, item);
-      }
+    const assessed = candidates
+      .map((candidate) => {
+        const score = scoreRawCandidate(candidate);
+        const latitude = decimalToNumber(candidate.latitude);
+        const longitude = decimalToNumber(candidate.longitude);
+        const inCoverage = coverage
+          ? latitude >= coverage.south &&
+            latitude <= coverage.north &&
+            longitude >= coverage.west &&
+            longitude <= coverage.east
+          : true;
+        return {
+          candidate,
+          score,
+          inCoverage,
+          cell: cellKey(candidate, tileDegrees),
+        };
+      })
+      .filter((item) => item.inCoverage && item.score.tier !== 'TIER_4')
+      .sort(
+        (left, right) =>
+          right.score.baseScore - left.score.baseScore ||
+          left.candidate.id.localeCompare(right.candidate.id),
+      );
 
-      const choose = (item: (typeof eligible)[number], geographicScore: number) => {
-        if (chosenIds.has(item.candidate.id) || categorySelected >= target) return;
+    const eligible = assessed.filter(
+      (item) => item.inCoverage && item.score.tier !== 'TIER_4',
+    );
+    const totalEligible = eligible.length;
+    const subtypeCounts = new Map<string, number>();
+    const cellCounts = new Map<string, number>();
+    const categoryCounts = new Map<string, number>();
+    const categoryTotals = new Map<string, number>();
+    const subtypeTotals = new Map<string, number>();
+    const cellTotals = new Map<string, number>();
+    for (const item of eligible) {
+      categoryTotals.set(
+        item.candidate.category,
+        (categoryTotals.get(item.candidate.category) ?? 0) + 1,
+      );
+      const subtype = item.candidate.subtype ?? 'unknown';
+      subtypeTotals.set(subtype, (subtypeTotals.get(subtype) ?? 0) + 1);
+      cellTotals.set(item.cell, (cellTotals.get(item.cell) ?? 0) + 1);
+    }
+    const categoryWeightSum = [...categoryTotals.keys()].reduce(
+      (sum, category) => sum + categoryWeight(category),
+      0,
+    );
+    eligible.sort((left, right) => {
+      const rank = (item: (typeof eligible)[number]) => {
+        const categoryShare =
+          (categoryTotals.get(item.candidate.category) ?? 0) /
+          Math.max(totalEligible, 1);
+        const categoryTarget =
+          categoryWeight(item.candidate.category) /
+          Math.max(categoryWeightSum, 1);
         const subtype = item.candidate.subtype ?? 'unknown';
-        if (subtype !== 'unknown' && (subtypeCounts.get(subtype) ?? 0) >= subtypeCap) return;
-        const cell = `${Math.floor(Number(item.candidate.latitude) / 0.05)},${Math.floor(Number(item.candidate.longitude) / 0.05)}`;
-        const diversityScore = subtype === 'unknown' ? 3 : (subtypeCounts.has(subtype) ? 5 : 10);
-        const totalScore = Math.min(100, item.score.baseScore + geographicScore + diversityScore);
-        chosenIds.add(item.candidate.id);
-        categorySelected++;
-        subtypeCounts.set(subtype, (subtypeCounts.get(subtype) ?? 0) + 1);
-        cells.set(cell, (cells.get(cell) ?? 0) + 1);
-        selected.push({
-          rawPlaceId: item.candidate.id,
-          cityId,
-          qualityScore: item.score.qualityScore,
-          importanceScore: item.score.importanceScore,
-          completenessScore: item.score.completenessScore,
-          geographicScore,
-          diversityScore,
-          totalScore,
-          tier: item.score.tier,
-          curationVersion: CURATION_VERSION,
-          selectionReason: `${category}:quality-importance-geography-subtype`,
-        });
+        const subtypeShare =
+          (subtypeTotals.get(subtype) ?? 0) / Math.max(totalEligible, 1);
+        const subtypeTarget = subtype === 'unknown' ? 0.35 : 0.2;
+        const cellShare =
+          (cellTotals.get(item.cell) ?? 0) / Math.max(totalEligible, 1);
+        return (
+          item.score.baseScore -
+          Math.min(4, Math.max(0, categoryShare - categoryTarget) * 12) -
+          Math.min(3, Math.max(0, subtypeShare - subtypeTarget) * 10) -
+          Math.min(2, cellShare * 4)
+        );
       };
-
-      [...cellLeaders.values()]
-        .sort((left, right) => right.score.baseScore - left.score.baseScore)
-        .forEach((item) => choose(item, 10));
-      eligible.forEach((item) => choose(item, 4));
+      const baseGap = right.score.baseScore - left.score.baseScore;
+      if (Math.abs(baseGap) > 4) return baseGap;
+      return (
+        rank(right) - rank(left) ||
+        baseGap ||
+        left.candidate.id.localeCompare(right.candidate.id)
+      );
+    });
+    for (const item of eligible.slice(0, selectionLimit)) {
+      const subtype = item.candidate.subtype ?? 'unknown';
+      const selectedCount = selected.length;
+      const categoryShare =
+        (categoryCounts.get(item.candidate.category) ?? 0) /
+        Math.max(selectedCount, 1);
+      // Category usefulness sets a soft preference, not a quota derived
+      // from raw OSM volume. This makes overrepresented categories face
+      // progressively stronger competition without excluding strong items.
+      const targetShare =
+        categoryWeight(item.candidate.category) /
+        Math.max(
+          [...categoryTotals.keys()].reduce(
+            (sum, category) => sum + categoryWeight(category),
+            0,
+          ),
+          1,
+        );
+      const categoryPenalty = Math.min(
+        8,
+        Math.max(0, categoryShare - targetShare) * 18,
+      );
+      const subtypeCount = subtypeCounts.get(subtype) ?? 0;
+      const subtypeShare = subtypeCount / Math.max(selectedCount, 1);
+      const subtypeTarget = subtype === 'unknown' ? 0.35 : 0.2;
+      const subtypePenalty = Math.min(
+        8,
+        Math.max(0, subtypeShare - subtypeTarget) * 16 +
+          (subtype === 'unknown'
+            ? subtypeCount * 0.05
+            : Math.max(0, subtypeCount - 2) * 0.35),
+      );
+      const cellCount = cellCounts.get(item.cell) ?? 0;
+      const geographicScore = Math.min(
+        4,
+        cellCount === 0 ? 4 : 1 / (cellCount + 1),
+      );
+      const diversityScore = Math.min(
+        4,
+        subtypeCount === 0 ? 4 : 1 / (subtypeCount + 1),
+      );
+      const totalScore = Math.min(
+        100,
+        item.score.baseScore + geographicScore + diversityScore,
+      );
+      if (item.score.tier === 'TIER_4') continue;
+      selected.push({
+        rawPlaceId: item.candidate.id,
+        cityId,
+        qualityScore: item.score.qualityScore,
+        importanceScore: item.score.importanceScore,
+        completenessScore: item.score.completenessScore,
+        geographicScore,
+        diversityScore,
+        totalScore: Math.round(totalScore * 100) / 100,
+        tier: item.score.tier,
+        curationVersion: CURATION_VERSION,
+        selectionReason: `ranked:${item.candidate.category}:base+bounded-coverage+diminishing-diversity`,
+      });
+      subtypeCounts.set(subtype, (subtypeCounts.get(subtype) ?? 0) + 1);
+      cellCounts.set(item.cell, (cellCounts.get(item.cell) ?? 0) + 1);
+      categoryCounts.set(
+        item.candidate.category,
+        (categoryCounts.get(item.candidate.category) ?? 0) + 1,
+      );
     }
 
     await this.prisma.$transaction(
@@ -234,7 +374,12 @@ export class CurationService {
       { timeout: 120_000 },
     );
 
-    return { city, quotas, selected: selected.length };
+    return {
+      city,
+      selected: selected.length,
+      eligible: totalEligible,
+      maxSelected: selectionLimit,
+    };
   }
 
   async preview(cityValue: string, requestedLimit = 100) {
@@ -287,10 +432,7 @@ export class CurationService {
           category,
           name: { not: '' },
         },
-        orderBy: [
-          { updatedAt: 'desc' },
-          { name: 'asc' },
-        ],
+        orderBy: [{ updatedAt: 'desc' }, { name: 'asc' }],
         take: Math.min(500, Math.max(quota * 8, 50)),
         select: {
           id: true,

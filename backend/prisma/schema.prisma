@@ -13,6 +13,15 @@ enum UserRole {
   ADMIN
 }
 
+enum GoogleMatchStatus {
+  PENDING
+  SEARCHED
+  MATCHED
+  NO_MATCH
+  LOW_CONFIDENCE
+  FAILED
+}
+
 model User {
   id       String   @id @default(cuid())
   email    String   @unique
@@ -25,6 +34,7 @@ model User {
 
   savedPlaces SavedPlace[]
   reviews     Review[]
+  ratings     PlaceRating[]
 }
 
 model City {
@@ -41,6 +51,7 @@ model City {
 
   latitude  Decimal @db.Decimal(9, 6)
   longitude Decimal @db.Decimal(9, 6)
+  timezone String @default("UTC")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -81,6 +92,7 @@ model RawPlace {
 
   @@unique([cityId, osmId])
   @@index([cityId, category, subtype])
+  @@index([cityId, latitude, longitude])
 }
 
 model CuratedPlace {
@@ -101,8 +113,43 @@ model CuratedPlace {
 
   rawPlace RawPlace @relation(fields: [rawPlaceId], references: [id], onDelete: Cascade)
   city City @relation(fields: [cityId], references: [id], onDelete: Cascade)
+  googleMatch GooglePlaceMatch?
+  photos CuratedPlacePhoto[]
 
   @@index([cityId, qualityScore])
+}
+
+model GooglePlaceMatch {
+  id String @id @default(cuid())
+
+  curatedPlaceId String @unique
+  googlePlaceId String?
+  matchStatus GoogleMatchStatus @default(PENDING)
+  confidenceScore Float?
+
+  matchedName String?
+  matchedAddress String?
+  matchedLatitude Decimal? @db.Decimal(9, 6)
+  matchedLongitude Decimal? @db.Decimal(9, 6)
+  matchedPhone String?
+  matchedWebsite String?
+  rating Float?
+  reviewCount Int?
+  googleMapsUrl String?
+  photoReferences Json?
+
+  searchQuery String?
+  candidateData Json?
+  failureReason String?
+  attempts Int @default(0)
+  lastAttemptAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  curatedPlace CuratedPlace @relation(fields: [curatedPlaceId], references: [id], onDelete: Cascade)
+
+  @@index([matchStatus, updatedAt])
+  @@index([googlePlaceId])
 }
 
 model Place {
@@ -135,6 +182,8 @@ model Place {
   city City @relation(fields: [cityId], references: [id], onDelete: Cascade)
 
   images PlaceImage[]
+  cityVerseScore CityVerseScore?
+  ratings PlaceRating[]
 
   savedPlaces SavedPlace[]
 
@@ -151,8 +200,66 @@ model PlaceImage {
   placeId String
 
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  source String @default("unknown")
+  sourceUrl String?
+  license String?
+  author String?
+  attribution String?
+  width Int?
+  height Int?
 
   place Place @relation(fields: [placeId], references: [id], onDelete: Cascade)
+}
+
+model CityVerseScore {
+  id String @id @default(cuid())
+  placeId String @unique
+  score Float
+  qualityScore Float
+  relevanceScore Float
+  completenessScore Float
+  importanceScore Float
+  formulaVersion String
+  calculatedAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  place Place @relation(fields: [placeId], references: [id], onDelete: Cascade)
+}
+
+model PlaceRating {
+  id String @id @default(cuid())
+  userId String
+  placeId String
+  rating Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  place Place @relation(fields: [placeId], references: [id], onDelete: Cascade)
+  @@unique([userId, placeId])
+  @@index([placeId])
+}
+
+model CuratedPlacePhoto {
+  id String @id @default(cuid())
+  curatedPlaceId String
+  imageUrl String
+  source String
+  sourceUrl String?
+  license String?
+  author String?
+  attribution String?
+  width Int?
+  height Int?
+  confidenceScore Float?
+  matchStatus String @default("PENDING")
+  failureReason String?
+  attempts Int @default(0)
+  lastAttemptAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  curatedPlace CuratedPlace @relation(fields: [curatedPlaceId], references: [id], onDelete: Cascade)
+  @@unique([curatedPlaceId, imageUrl])
+  @@index([curatedPlaceId, matchStatus])
 }
 
 model SavedPlace {

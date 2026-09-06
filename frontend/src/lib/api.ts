@@ -14,6 +14,7 @@ export type CitySummary = {
   image?: string | null;
   featured?: boolean;
   featuredOrder?: number | null;
+  timezone?: string;
   _count?: {
     places: number;
   };
@@ -53,6 +54,8 @@ export type Review = {
   };
 };
 
+export type RatingSummary = { average: number; count: number };
+
 export type PlaceSummary = {
   id: string;
   osmId: string | null;
@@ -66,10 +69,12 @@ export type PlaceSummary = {
   cityId: string;
   createdAt: string;
   updatedAt: string;
+  cityVerseScore?: number;
   city: {
     id: string;
     name: string;
     country: string;
+    timezone?: string;
   };
 };
 
@@ -82,7 +87,7 @@ export type PlacesResponse = {
 };
 
 export type CityPlacesResponse = {
-  city: Pick<CitySummary, "id" | "name">;
+  city: Pick<CitySummary, "id" | "name" | "timezone"> & { latitude: string; longitude: string };
   data: PlaceSummary[];
   categories: string[];
   subtypes: Array<{ category: string; value: string }>;
@@ -101,6 +106,17 @@ export type CityPlacesResponse = {
     sort: string;
   };
 };
+
+export type MapPlace = { id: string; name: string; category: string; subtype: string | null; latitude: string; longitude: string };
+export type MapPlacesResponse = { city: { id: string; name: string; latitude: string; longitude: string }; data: MapPlace[]; limit: number; truncated: boolean };
+
+export async function getMapPlaces(cityId: string, bounds: { north: number; south: number; east: number; west: number; category?: string }): Promise<MapPlacesResponse> {
+  const params = new URLSearchParams({ north: String(bounds.north), south: String(bounds.south), east: String(bounds.east), west: String(bounds.west), limit: "300" });
+  if (bounds.category) params.set("category", bounds.category);
+  const res = await fetch(`${API_URL}/cities/${cityId}/map/places?${params}`, { cache: "no-store" });
+  if (!res.ok) throw new Error("Failed to load map places");
+  return res.json();
+}
 
 export async function getCities(
   page = 1,
@@ -304,6 +320,38 @@ export async function createReview(data: {
   }
 
   return res.json();
+}
+
+async function authorizedRequest(path: string, init: RequestInit = {}) {
+  const token = typeof window !== "undefined" ? localStorage.getItem("cityverse_token") : null;
+  if (!token) throw new Error("Please login first");
+  const headers = new Headers(init.headers);
+  headers.set("Authorization", `Bearer ${token}`);
+  if (init.body) headers.set("Content-Type", "application/json");
+  return fetch(`${API_URL}${path}`, { ...init, headers });
+}
+
+export async function getRatingSummary(placeId: string): Promise<RatingSummary> {
+  const res = await fetch(`${API_URL}/ratings/${placeId}`, { cache: "no-store" });
+  if (!res.ok) throw new Error("Failed to fetch ratings");
+  return res.json();
+}
+
+export async function ratePlace(placeId: string, rating: number): Promise<RatingSummary> {
+  const res = await authorizedRequest("/ratings", { method: "POST", body: JSON.stringify({ placeId, rating }) });
+  if (!res.ok) throw new Error((await res.json().catch(() => null))?.message || "Failed to save rating");
+  return res.json();
+}
+
+export async function updateReview(id: string, data: { rating: number; comment: string; placeId: string }) {
+  const res = await authorizedRequest(`/reviews/${id}`, { method: "PATCH", body: JSON.stringify(data) });
+  if (!res.ok) throw new Error((await res.json().catch(() => null))?.message || "Failed to update review");
+  return res.json() as Promise<Review>;
+}
+
+export async function deleteReview(id: string) {
+  const res = await authorizedRequest(`/reviews/${id}`, { method: "DELETE" });
+  if (!res.ok) throw new Error((await res.json().catch(() => null))?.message || "Failed to delete review");
 }
 
 

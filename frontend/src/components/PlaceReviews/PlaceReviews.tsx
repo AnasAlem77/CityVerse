@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Star } from "lucide-react";
 
 import ReviewForm from "@/components/ReviewForm/ReviewForm";
+import { deleteReview, updateReview } from "@/lib/api";
 
 type Review = {
   id: string;
@@ -44,6 +45,27 @@ export default function PlaceReviews({
     useState<Review[]>(initialReviews);
 
   const [loading, setLoading] = useState(false);
+
+  function currentUserId() {
+    const token = localStorage.getItem("cityverse_token");
+    try { return token ? JSON.parse(atob(token.split(".")[1])).sub as string : null; }
+    catch { return null; }
+  }
+
+  async function editReview(review: Review) {
+    const comment = window.prompt("Update your review", review.comment)?.trim();
+    if (!comment) return;
+    const rating = Number(window.prompt("Rating from 1 to 5", String(review.rating)));
+    if (!Number.isInteger(rating) || rating < 1 || rating > 5) return;
+    try { await updateReview(review.id, { placeId, rating, comment }); await refreshReviews(); }
+    catch (error) { console.error(error); }
+  }
+
+  async function removeReview(id: string) {
+    if (!window.confirm("Delete this review?")) return;
+    try { await deleteReview(id); await refreshReviews(); }
+    catch (error) { console.error(error); }
+  }
 
   async function refreshReviews() {
     try {
@@ -145,6 +167,12 @@ export default function PlaceReviews({
               <p className="mt-4 text-sm leading-7 text-slate-600 dark:text-slate-400">
                 {review.comment}
               </p>
+              {review.user?.id && review.user.id === currentUserId() && (
+                <div className="mt-4 flex gap-3 text-xs font-semibold">
+                  <button type="button" onClick={() => editReview(review)} className="text-[var(--primary)] hover:underline">Edit</button>
+                  <button type="button" onClick={() => removeReview(review.id)} className="text-red-600 hover:underline">Delete</button>
+                </div>
+              )}
 
             </article>
 

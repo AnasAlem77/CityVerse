@@ -14,4 +14,6 @@ export class CreateCityDto {
   latitude: number;
 
   longitude: number;
+
+  timezone?: string;
 }

@@ -9,6 +9,11 @@ import { PlaceImagesModule } from './place-images/place-images.module';
 import { SavedPlacesModule } from './saved-places/saved-places.module';
 import { ReviewsModule } from './reviews/reviews.module';
 import { OsmModule } from './osm/osm.module';
+import { RatingsModule } from './ratings/ratings.module';
+import { MapModule } from './map/map.module';
+import { RoutingModule } from './routing/routing.module';
+import { WeatherModule } from './weather/weather.module';
+import { PublicDataModule } from './public-data/public-data.module';
 
 @Module({
   imports: [
@@ -24,6 +29,11 @@ import { OsmModule } from './osm/osm.module';
     PlaceImagesModule,
     SavedPlacesModule,
     ReviewsModule,
+    RatingsModule,
+    MapModule,
+    RoutingModule,
+    WeatherModule,
+    PublicDataModule,
   ],
 })
 export class AppModule {}

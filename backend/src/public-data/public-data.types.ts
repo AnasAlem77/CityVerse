@@ -1,0 +1,2 @@
+export type PublicAlert = { id: string; type: string; severity: string; title: string; description: string; location?: { latitude?: number; longitude?: number }; startTime?: string; endTime?: string; source: string; sourceUrl?: string };
+export interface PublicSafetyProvider { getAlerts(latitude: number, longitude: number): Promise<{ available: boolean; alerts: PublicAlert[]; source: string; reason?: string }>; }

@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Prisma } from '../../generated/prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreatePlaceDto } from './dto/create-place.dto';
+import { calculateCityVerseScore } from './cityverse-score';
 
 const DEFAULT_PAGE = 1;
 const DEFAULT_LIMIT = 24;
@@ -153,6 +154,7 @@ export class PlacesService {
     return {
       data: places.map((place) => ({
         ...place,
+        cityVerseScore: Number(calculateCityVerseScore(place).toFixed(1)),
         reviewsCount: place._count.reviews,
         _count: undefined,
       })),
@@ -289,6 +291,7 @@ export class PlacesService {
       averageRating: Number(
         averageRating.toFixed(1),
       ),
+      cityVerseScore: Number(calculateCityVerseScore(place).toFixed(1)),
     };
   }
 }
