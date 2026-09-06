@@ -26,6 +26,8 @@ function buildQuery(id: string, page: number, query: PlacesQuery) {
 
 function PlaceCard({ place }: { place: PlaceSummary }) {
   const arabicName = isArabic(place.name);
+  const cityVerseScore =
+    typeof place.cityVerseScore === "number" ? place.cityVerseScore : null;
 
   return (
     <Link href={`/places/${place.id}`} className="group block">
@@ -37,7 +39,17 @@ function PlaceCard({ place }: { place: PlaceSummary }) {
         <div className="p-5">
           <h3 dir={arabicName ? "rtl" : "ltr"} className={`line-clamp-1 text-xl text-[var(--foreground)] ${arabicName ? "font-arabic font-bold" : "font-black"}`}>{place.name}</h3>
           <div className="mt-3 flex items-center justify-between">
-            <div className="flex items-center gap-1.5 text-sm text-[var(--muted)]"><Star className="h-4 w-4 text-[var(--accent)]" /><span>No reviews yet</span></div>
+            {cityVerseScore !== null ? (
+              <div className="flex items-center gap-1.5 text-sm font-semibold text-[var(--muted)]">
+                <Star className="h-4 w-4 fill-[var(--accent)] text-[var(--accent)]" />
+                <span>{cityVerseScore.toFixed(1)} CityVerse Score</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1.5 text-sm text-[var(--muted)]">
+                <Star className="h-4 w-4 text-[var(--accent)]" />
+                <span>CityVerse Score unavailable</span>
+              </div>
+            )}
             <span className="text-sm font-semibold text-[var(--primary)] transition-colors group-hover:text-[var(--primary-hover)]">Explore</span>
           </div>
         </div>
@@ -95,7 +107,7 @@ export default async function CityPage({ params, searchParams }: { params: Promi
           <div className="flex gap-3"><select name="sort" defaultValue={query.sort ?? "name_asc"} className="min-w-0 flex-1 rounded-2xl border border-[var(--border)] bg-transparent px-4 py-3 text-sm outline-none focus:border-[var(--primary)]"><option value="name_asc">A-Z</option><option value="name_desc">Z-A</option><option value="newest">Newest</option><option value="most_reviewed">Most reviewed</option></select><button type="submit" className="rounded-2xl bg-[var(--primary)] px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[var(--primary-hover)]">Apply</button></div>
         </form>
 
-        {result.data.length === 0 ? <div className="rounded-3xl border border-[var(--border)] bg-[var(--card)] p-10 text-center"><MapPin className="mx-auto mb-4 h-10 w-10 text-[var(--muted)]" /><h2 className="text-xl font-bold text-[var(--foreground)]">No places found</h2><p className="mt-2 text-sm text-[var(--muted)]">Try another category or search term.</p></div> : <><div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">{result.data.map((place) => <PlaceCard key={place.id} place={place} />)}</div><Pagination id={id} page={result.pagination.currentPage} totalPages={result.pagination.totalPages} query={query} /></>}
+        {result.data.length === 0 ? <div className="rounded-3xl border border-[var(--border)] bg-[var(--card)] p-10 text-center"><MapPin className="mx-auto mb-4 h-10 w-10 text-[var(--muted)]" /><h2 className="text-xl font-bold text-[var(--foreground)]">No places found</h2><p className="mt-2 text-sm text-[var(--muted)]">Try another category or search term.</p></div> : <><div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">{result.data.map((place) => <PlaceCard key={place.id} place={place} />)}</div><Pagination id={id} page={result.pagination.currentPage} totalPages={result.pagination.totalPages} query={query} /><p className="mt-4 text-center text-sm text-[var(--muted)]">Total Places: {result.pagination.total.toLocaleString()}</p></>}
       </section>
     </div>
   );
