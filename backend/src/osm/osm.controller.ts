@@ -3,9 +3,12 @@ import {
   Get,
   Post,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 
 import { OsmService } from './osm.service';
+import { JwtGuard } from '../auth/jwt.guard';
+import { AdminGuard } from '../auth/guards/admin.guard';
 
 @Controller('osm')
 export class OsmController {
@@ -38,6 +41,7 @@ export class OsmController {
   }
 
   @Post('import')
+  @UseGuards(JwtGuard, AdminGuard)
   importNearbyPlaces(
     @Query('cityId') cityId: string,
     @Query('latitude') latitude: string,
@@ -55,6 +59,7 @@ export class OsmController {
   }
 
   @Post('update-existing')
+  @UseGuards(JwtGuard, AdminGuard)
   updateExistingPlaces(
     @Query('cityId') cityId: string,
   ) {

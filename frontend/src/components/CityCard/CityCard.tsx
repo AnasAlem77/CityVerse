@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, MapPin } from "lucide-react";
+import MediaFallback from "../MediaFallback/MediaFallback";
 
 type CityCardProps = {
   id: string;
@@ -38,18 +39,7 @@ export default function CityCard({
     >
       {/* Image */}
       <div className="relative h-60 overflow-hidden">
-        <Image
-          src={image}
-          alt={name}
-          fill
-          className="
-            object-cover
-            transition-transform
-            duration-700
-            group-hover:scale-105
-          "
-          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-        />
+        {image ? <Image src={image} alt={name} fill className="object-cover transition-transform duration-700 group-hover:scale-105" sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" /> : <MediaFallback label={`${name} image unavailable`} />}
 
         {/* Image overlay */}
         <div

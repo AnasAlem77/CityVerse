@@ -8,6 +8,44 @@ const DEFAULT_PAGE = 1;
 const DEFAULT_LIMIT = 24;
 const MAX_LIMIT = 100;
 
+const SEARCH_ALIASES: Array<[RegExp, string[]]> = [
+  [/\bcoffee\s+shop\b|\bcoffee\b|\bcafe\b/, ['cafe', 'coffee']],
+  [/\brestaurant\b|\bfood\b|\beat\b/, ['restaurant', 'food']],
+  [/\blaundry\b|\bwash\s+clothes\b/, ['laundry']],
+  [/\bbeach\b|\bsea\b/, ['beach']],
+  [/\bhotel\b|\bstay\b/, ['hotel', 'accommodation']],
+  [/\bmosque\b/, ['mosque']],
+  [/\bpark\b/, ['park']],
+];
+
+function searchTerms(value: string) {
+  const normalized = value.toLowerCase().trim();
+  const terms = new Set([normalized]);
+  for (const [pattern, aliases] of SEARCH_ALIASES) {
+    if (pattern.test(normalized)) aliases.forEach((alias) => terms.add(alias));
+  }
+  return [...terms];
+}
+
+function searchScore(place: { name: string; category: string; subtype: string | null; description: string; address: string | null; city: { name: string } }, terms: string[]) {
+  const name = place.name.toLowerCase();
+  const category = place.category.toLowerCase();
+  const subtype = place.subtype?.toLowerCase() ?? '';
+  const city = place.city.name.toLowerCase();
+  const description = place.description.toLowerCase();
+  const address = place.address?.toLowerCase() ?? '';
+  return Math.max(...terms.map((term) => {
+    if (name === term) return 1000;
+    if (name.startsWith(term)) return 800;
+    if (name.includes(term)) return 600;
+    if (category.includes(term)) return 450;
+    if (subtype.includes(term)) return 400;
+    if (city.includes(term)) return 250;
+    if (description.includes(term) || address.includes(term)) return 100;
+    return 0;
+  }));
+}
+
 export type PlacesSort =
   | 'name_asc'
   | 'name_desc'
@@ -65,6 +103,7 @@ export class PlacesService {
         : 'name_asc';
 
     const search = options.search?.trim();
+    const terms = search ? searchTerms(search) : [];
     const where: Prisma.PlaceWhereInput = {};
 
     if (options.city?.trim()) {
@@ -87,14 +126,16 @@ export class PlacesService {
 
     if (search) {
       where.OR = [
-        { name: { contains: search, mode: 'insensitive' } },
-        { description: { contains: search, mode: 'insensitive' } },
-        { address: { contains: search, mode: 'insensitive' } },
-        { category: { contains: search, mode: 'insensitive' } },
-        { subtype: { contains: search, mode: 'insensitive' } },
+        ...terms.flatMap((term) => [
+          { name: { contains: term, mode: 'insensitive' as const } },
+          { description: { contains: term, mode: 'insensitive' as const } },
+          { address: { contains: term, mode: 'insensitive' as const } },
+          { category: { contains: term, mode: 'insensitive' as const } },
+          { subtype: { contains: term, mode: 'insensitive' as const } },
+        ]),
         {
           city: {
-            name: { contains: search, mode: 'insensitive' },
+            OR: terms.map((term) => ({ name: { contains: term, mode: 'insensitive' as const } })),
           },
         },
       ];
@@ -117,8 +158,7 @@ export class PlacesService {
       this.prisma.place.count({ where }),
       this.prisma.place.findMany({
         where,
-        skip,
-        take: safeLimit,
+        ...(search ? {} : { skip, take: safeLimit }),
         orderBy,
         select: {
           id: true,
@@ -149,10 +189,17 @@ export class PlacesService {
       }),
     ]);
 
+    const rankedPlaces = search
+      ? places
+          .map((place) => ({ place, score: searchScore(place, terms) }))
+          .sort((a, b) => b.score - a.score || a.place.name.localeCompare(b.place.name) || a.place.id.localeCompare(b.place.id))
+          .slice(skip, skip + safeLimit)
+          .map(({ place }) => place)
+      : places;
     const totalPages = Math.max(1, Math.ceil(total / safeLimit));
 
     return {
-      data: places.map((place) => ({
+      data: rankedPlaces.map((place) => ({
         ...place,
         cityVerseScore: Number(calculateCityVerseScore(place).toFixed(1)),
         reviewsCount: place._count.reviews,

@@ -98,7 +98,7 @@ export default async function CityPage({ params, searchParams }: { params: Promi
           <div className="mt-5 max-w-xl"><CityWeather cityId={result.city.id} /></div>
         </div>
 
-        <section className="mb-10"><div className="mb-4"><p className="text-sm font-semibold uppercase tracking-wide text-[var(--primary)]">City map</p><h2 className="mt-1 text-2xl font-black text-[var(--foreground)]">Explore by location</h2></div><CityMap cityId={result.city.id} latitude={Number(result.city.latitude)} longitude={Number(result.city.longitude)} category={query.category} /></section>
+        <section className="mb-10"><div className="mb-4 flex flex-wrap items-end justify-between gap-3"><div><p className="text-sm font-semibold uppercase tracking-wide text-[var(--primary)]">City map</p><h2 className="mt-1 text-2xl font-black text-[var(--foreground)]">Explore by location</h2></div><Link href={`/cities/${result.city.id}/digital-twin`} className="text-sm font-semibold text-[var(--primary)] hover:underline">Open Digital Twin</Link></div><CityMap cityId={result.city.id} latitude={Number(result.city.latitude)} longitude={Number(result.city.longitude)} category={query.category} /></section>
 
         <form className="mb-10 grid gap-3 rounded-3xl border border-[var(--border)] bg-[var(--card)] p-5 md:grid-cols-4" method="get">
           <input name="search" defaultValue={query.search} placeholder="Search this city" className="rounded-2xl border border-[var(--border)] bg-transparent px-4 py-3 text-sm outline-none focus:border-[var(--primary)]" />

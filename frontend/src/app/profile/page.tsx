@@ -11,6 +11,8 @@ import {
   User,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import PlaceCard from "@/components/PlaceCard/PlaceCard";
+import { getSavedPlaces, removeSavedPlace, SavedPlace } from "@/lib/api";
 
 type UserData = {
   id: string;
@@ -22,6 +24,9 @@ export default function ProfilePage() {
   const router = useRouter();
 
   const [user, setUser] = useState<UserData | null>(null);
+  const [savedPlaces, setSavedPlaces] = useState<SavedPlace[]>([]);
+  const [savedLoading, setSavedLoading] = useState(true);
+  const [savedError, setSavedError] = useState("");
 
   useEffect(() => {
     const storedUser = localStorage.getItem("cityverse_user");
@@ -33,6 +38,10 @@ export default function ProfilePage() {
 
     try {
       setUser(JSON.parse(storedUser));
+      getSavedPlaces()
+        .then(setSavedPlaces)
+        .catch((error) => setSavedError(error instanceof Error ? error.message : "Unable to load saved places."))
+        .finally(() => setSavedLoading(false));
     } catch {
       localStorage.removeItem("cityverse_user");
       localStorage.removeItem("cityverse_token");
@@ -48,10 +57,19 @@ export default function ProfilePage() {
     router.refresh();
   }
 
+  async function removeSaved(placeId: string) {
+    try {
+      await removeSavedPlace(placeId);
+      setSavedPlaces((current) => current.filter((item) => item.place.id !== placeId));
+    } catch (error) {
+      setSavedError(error instanceof Error ? error.message : "Unable to remove saved place.");
+    }
+  }
+
   if (!user) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-slate-950">
-        <div className="text-sm text-slate-500 dark:text-slate-400">
+      <main className="flex min-h-screen items-center justify-center bg-[var(--background)]">
+        <div className="text-sm text-[var(--muted)]">
           Loading profile...
         </div>
       </main>
@@ -59,7 +77,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-50 dark:bg-slate-950">
+    <main className="min-h-screen bg-[var(--background)]">
       <div className="mx-auto max-w-4xl px-5 py-10 sm:px-6">
         <Link
           href="/"
@@ -88,7 +106,7 @@ export default function ProfilePage() {
             dark:bg-slate-900
           "
         >
-          <div className="h-32 bg-blue-600" />
+          <div className="h-32 bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)]" />
 
           <div className="px-6 pb-7 sm:px-8">
             <div
@@ -97,20 +115,20 @@ export default function ProfilePage() {
                 items-center justify-center
                 rounded-3xl
                 border-4 border-white
-                bg-blue-50
+                bg-orange-50
                 text-3xl font-black
-                text-blue-600
+                text-[var(--primary)]
                 shadow-md
                 dark:border-slate-900
                 dark:bg-slate-800
-                dark:text-blue-400
+                dark:text-[var(--primary)]
               "
             >
               {user.name.charAt(0).toUpperCase()}
             </div>
 
             <div className="mt-5">
-              <h1 className="text-3xl font-black text-slate-900 dark:text-white">
+              <h1 className="text-3xl font-black text-[var(--foreground)]">
                 {user.name}
               </h1>
 
@@ -191,6 +209,7 @@ export default function ProfilePage() {
 
               <button
                 type="button"
+                onClick={() => document.getElementById("saved-places")?.scrollIntoView({ behavior: "smooth" })}
                 className="
                   flex items-center gap-4
                   rounded-2xl
@@ -220,6 +239,33 @@ export default function ProfilePage() {
                 </div>
               </button>
             </div>
+
+            <section id="saved-places" className="mt-10 border-t border-slate-200 pt-8 dark:border-slate-800">
+              <div className="flex items-end justify-between gap-4">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-wide text-[var(--primary)]">Your collection</p>
+                  <h2 className="mt-2 text-2xl font-black text-slate-900 dark:text-white">Saved Places</h2>
+                </div>
+                {!savedLoading && <span className="text-sm text-slate-500 dark:text-slate-400">{savedPlaces.length} saved</span>}
+              </div>
+
+              {savedLoading ? (
+                <p className="mt-5 text-sm text-slate-500 dark:text-slate-400">Loading saved places...</p>
+              ) : savedError ? (
+                <div className="mt-5 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900/60 dark:bg-red-950/20 dark:text-red-300">{savedError}</div>
+              ) : savedPlaces.length === 0 ? (
+                <div className="mt-5 rounded-2xl border border-dashed border-slate-300 p-6 text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">Save places you want to revisit and they will appear here.</div>
+              ) : (
+                <div className="mt-5 grid gap-5 md:grid-cols-2">
+                  {savedPlaces.map(({ place }) => (
+                    <div key={place.id} className="relative">
+                      <PlaceCard {...place} />
+                      <button type="button" onClick={() => removeSaved(place.id)} className="absolute right-4 top-4 rounded-full bg-white/90 px-3 py-2 text-xs font-bold text-red-600 shadow dark:bg-slate-900/90">Remove</button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
 
             <button
               onClick={handleLogout}

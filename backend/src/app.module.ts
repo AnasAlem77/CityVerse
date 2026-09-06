@@ -14,6 +14,12 @@ import { MapModule } from './map/map.module';
 import { RoutingModule } from './routing/routing.module';
 import { WeatherModule } from './weather/weather.module';
 import { PublicDataModule } from './public-data/public-data.module';
+import { RecommendationsModule } from './recommendations/recommendations.module';
+import { AssistantModule } from './assistant/assistant.module';
+import { DashboardModule } from './dashboard/dashboard.module';
+import { IntelligenceModule } from './intelligence/intelligence.module';
+import { PredictionModule } from './predictions/prediction.module';
+import { HealthModule } from './health/health.module';
 
 @Module({
   imports: [
@@ -34,6 +40,12 @@ import { PublicDataModule } from './public-data/public-data.module';
     RoutingModule,
     WeatherModule,
     PublicDataModule,
+    RecommendationsModule,
+    AssistantModule,
+    DashboardModule,
+    IntelligenceModule,
+    PredictionModule,
+    HealthModule,
   ],
 })
 export class AppModule {}

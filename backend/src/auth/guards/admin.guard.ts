@@ -10,6 +10,6 @@ export class AdminGuard implements CanActivate {
 
     const user = request.user;
 
-    return user && user.role === 'ADMIN';
+    return Boolean(user && user.role === 'ADMIN');
   }
 }

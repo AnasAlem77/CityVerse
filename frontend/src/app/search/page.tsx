@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { MapPin, Compass, Star, ArrowLeft } from "lucide-react";
+import { MapPin, Compass, ArrowLeft } from "lucide-react";
 import { getCities, getPlaces } from "@/lib/api";
+import PlaceCard from "@/components/PlaceCard/PlaceCard";
 
 type SearchPageProps = {
   searchParams: Promise<{
@@ -20,45 +21,17 @@ export default async function SearchPage({
   ]);
   const places = placesResult.data;
 
-  const normalizedQuery = query.toLowerCase();
-
-  const matchingCities = query
-    ? cities.data.filter((city) => {
-        const text = [
-          city.name,
-          city.country,
-          city.description,
-        ]
-          .filter(Boolean)
-          .join(" ")
-          .toLowerCase();
-
-        return text.includes(normalizedQuery);
-      })
-    : [];
-
-  const matchingPlaces = query
-    ? places.filter((place: any) => {
-        const text = [
-          place.name,
-          place.category,
-          place.description,
-          place.city?.name,
-          place.city?.country,
-        ]
-          .filter(Boolean)
-          .join(" ")
-          .toLowerCase();
-
-        return text.includes(normalizedQuery);
-      })
-    : [];
+  const matchingCities = query ? cities.data.filter((city) => {
+    const text = [city.name, city.country, city.description].filter(Boolean).join(" ").toLowerCase();
+    return text.includes(query.toLowerCase());
+  }) : [];
+  const matchingPlaces = query ? places : [];
 
   const totalResults =
-    matchingCities.length + matchingPlaces.length;
+    matchingCities.length + placesResult.total;
 
   return (
-    <main className="min-h-screen bg-[var(--background)] px-6 py-16">
+    <main className="min-h-screen bg-[var(--background)] px-4 py-12 sm:px-6 sm:py-16">
       <div className="mx-auto max-w-7xl">
 
         <Link
@@ -91,6 +64,12 @@ export default async function SearchPage({
             </p>
           )}
         </div>
+
+        <form action="/search" className="mb-10 flex flex-col gap-3 sm:flex-row">
+          <label htmlFor="site-search" className="sr-only">Search cities and places</label>
+          <input id="site-search" name="q" defaultValue={query} placeholder="Search cities, places, or experiences" className="min-w-0 flex-1 rounded-2xl border border-[var(--border-strong)] bg-[var(--card)] px-4 py-3 text-sm text-[var(--foreground)] outline-none transition focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary)]/20" />
+          <button type="submit" className="rounded-2xl bg-[var(--primary)] px-5 py-3 text-sm font-bold text-white transition hover:bg-[var(--primary-hover)]">Search</button>
+        </form>
 
         {!query ? (
           <div className="glass rounded-3xl border p-10 text-center">
@@ -192,7 +171,7 @@ export default async function SearchPage({
               <section>
                 <div className="mb-6 flex items-end justify-between">
                   <div>
-                    <p className="text-sm font-bold uppercase tracking-wider text-purple-500">
+                    <p className="text-sm font-bold uppercase tracking-wider text-[var(--primary)]">
                       Places
                     </p>
 
@@ -208,48 +187,7 @@ export default async function SearchPage({
                 </div>
 
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                  {matchingPlaces.map((place: any) => (
-                    <Link
-                      key={place.id}
-                      href={`/places/${place.id}`}
-                      className="glass group rounded-3xl border p-6 transition duration-500 hover:-translate-y-2 hover:shadow-2xl"
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-purple-500/10 text-purple-500 transition duration-500 group-hover:scale-110">
-                          <MapPin size={27} />
-                        </div>
-
-                        {place.averageRating != null && (
-                          <div className="flex items-center gap-1 rounded-full bg-amber-400/10 px-3 py-1 text-sm font-bold text-amber-500">
-                            <Star
-                              size={14}
-                              className="fill-current"
-                            />
-                            {Number(
-                              place.averageRating
-                            ).toFixed(1)}
-                          </div>
-                        )}
-                      </div>
-
-                      <p className="mt-6 text-sm font-bold text-purple-500">
-                        {place.category ?? "Place"}
-                      </p>
-
-                      <h3 className="mt-2 text-2xl font-black text-[var(--foreground)]">
-                        {place.name}
-                      </h3>
-
-                      <p className="mt-3 line-clamp-3 text-sm leading-6 text-[var(--muted)]">
-                        {place.description ??
-                          "Discover this amazing place."}
-                      </p>
-
-                      <div className="mt-6 font-bold text-[var(--primary)]">
-                        View place →
-                      </div>
-                    </Link>
-                  ))}
+                  {matchingPlaces.map((place) => <PlaceCard key={place.id} {...place} />)}
                 </div>
               </section>
             )}

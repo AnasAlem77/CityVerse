@@ -46,6 +46,11 @@ export class CitiesController {
   }
 
   // Public - City details
+  @Get(':id/capabilities')
+  getCityCapabilities(@Param('id') id: string) {
+    return this.citiesService.getCityCapabilities(id);
+  }
+
   @Get(':id')
   getCityById(
     @Param('id') id: string,

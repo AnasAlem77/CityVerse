@@ -30,7 +30,7 @@ function clustered(places: MapPlace[]) {
 export default function CityMap({ cityId, latitude, longitude, category }: Props) {
   const [places, setPlaces] = useState<MapPlace[]>([]); const [state, setState] = useState("loading");
   return <div className="overflow-hidden rounded-3xl border border-[var(--border)] bg-[var(--card)]">
-    <div className="relative h-[420px]">
+    <div className="relative h-[300px] sm:h-[360px] lg:h-[420px]">
       <MapContainer center={[latitude, longitude]} zoom={12} scrollWheelZoom className="h-full w-full">
         <TileLayer attribution='&copy; OpenStreetMap contributors' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
         <ViewportLoader cityId={cityId} category={category} onPlaces={setPlaces} onState={setState} />

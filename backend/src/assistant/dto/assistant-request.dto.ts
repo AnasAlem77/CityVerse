@@ -1,0 +1,5 @@
+import { ArrayMaxSize, IsArray, IsIn, IsLatitude, IsLongitude, IsOptional, IsString, MaxLength, ValidateNested } from 'class-validator';
+import { Type } from 'class-transformer';
+class CoordinateDto { @Type(() => Number) @IsLatitude() latitude: number; @Type(() => Number) @IsLongitude() longitude: number; }
+class HistoryMessageDto { @IsIn(['user', 'assistant']) role: 'user' | 'assistant'; @IsString() @MaxLength(2000) content: string; }
+export class AssistantRequestDto { @IsString() @MaxLength(2000) message: string; @IsOptional() @IsString() @MaxLength(100) conversationId?: string; @IsOptional() @IsString() cityId?: string; @IsOptional() @IsString() placeId?: string; @IsOptional() @Type(() => Number) @IsLatitude() latitude?: number; @IsOptional() @Type(() => Number) @IsLongitude() longitude?: number; @IsOptional() @ValidateNested() @Type(() => CoordinateDto) origin?: CoordinateDto; @IsOptional() @ValidateNested() @Type(() => CoordinateDto) destination?: CoordinateDto; @IsOptional() @IsArray() @ArrayMaxSize(6) @ValidateNested({ each: true }) @Type(() => HistoryMessageDto) history?: HistoryMessageDto[]; }

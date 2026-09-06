@@ -103,6 +103,12 @@ export class CitiesService {
     return city;
   }
 
+  async getCityCapabilities(id: string) {
+    const city = await this.prisma.city.findUnique({ where: { id }, select: { id: true, name: true, timezone: true, latitude: true, longitude: true } });
+    if (!city) throw new NotFoundException('City not found');
+    return { city, capabilities: { places: true, map: true, recommendations: true, assistant: true, analytics: true, weather: 'available', routing: true, alerts: 'provider-dependent', traffic: 'unavailable', incidents: 'provider-dependent', transit: 'unavailable', events: 'unavailable', airQuality: 'unavailable', environment: 'provider-dependent', mobility: 'unavailable', temporal: 'limited' } };
+  }
+
   async getCityPlaces(
     cityId: string,
     filters: {

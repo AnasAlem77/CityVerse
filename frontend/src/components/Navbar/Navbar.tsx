@@ -35,6 +35,10 @@ const links = [
     name: "Places",
     href: "/places",
   },
+  {
+    name: "Assistant",
+    href: "/assistant",
+  },
 ];
 
 export default function Navbar() {

@@ -5,6 +5,7 @@ import {
   Star,
 } from "lucide-react";
 import Rating from "../Rating/Rating";
+import MediaFallback from "../MediaFallback/MediaFallback";
 
 const isArabic = (text: string) =>
   /[\u0600-\u06FF]/.test(text);
@@ -69,6 +70,8 @@ export default function PlaceCard({
           dark:to-slate-950
         "
       >
+        <MediaFallback label={`${name} image unavailable`} />
+
         {/* Orange glow */}
         <div
           className="

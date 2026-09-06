@@ -1,0 +1,39 @@
+name: CityVerse checks
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            backend/package-lock.json
+            frontend/package-lock.json
+      - name: Backend dependencies
+        run: npm ci
+        working-directory: backend
+      - name: Frontend dependencies
+        run: npm ci
+        working-directory: frontend
+      - name: Prisma validation
+        run: npx prisma validate
+        working-directory: backend
+      - name: Backend tests
+        run: npm test -- --runInBand
+        working-directory: backend
+      - name: Backend build
+        run: npm run build
+        working-directory: backend
+      - name: Frontend typecheck
+        run: npx tsc --noEmit
+        working-directory: frontend
+      - name: Frontend build
+        run: npx next build --webpack
+        working-directory: frontend

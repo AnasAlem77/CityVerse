@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 
 import { JwtGuard } from '../auth/jwt.guard';
+import { AdminGuard } from '../auth/guards/admin.guard';
 import { PlaceImagesService } from './place-images.service';
 
 
@@ -20,7 +21,7 @@ export class PlaceImagesController {
   ) {}
 
 
-  @UseGuards(JwtGuard)
+  @UseGuards(JwtGuard, AdminGuard)
   @Post(':placeId/images')
   addImage(
     @Param('placeId') placeId: string,

@@ -97,7 +97,7 @@ export default function PlaceReviews({
 
       <div className="mb-6">
 
-        <p className="text-sm font-semibold uppercase tracking-wide text-blue-600 dark:text-blue-400">
+        <p className="text-sm font-semibold uppercase tracking-wide text-[var(--primary)]">
           Community
         </p>
 
@@ -122,7 +122,7 @@ export default function PlaceReviews({
 
             <article
               key={review.id}
-              className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:shadow-md dark:border-slate-800 dark:bg-slate-900"
+              className="rounded-3xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-sm transition hover:shadow-md"
             >
 
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -169,8 +169,8 @@ export default function PlaceReviews({
               </p>
               {review.user?.id && review.user.id === currentUserId() && (
                 <div className="mt-4 flex gap-3 text-xs font-semibold">
-                  <button type="button" onClick={() => editReview(review)} className="text-[var(--primary)] hover:underline">Edit</button>
-                  <button type="button" onClick={() => removeReview(review.id)} className="text-red-600 hover:underline">Delete</button>
+                  <button type="button" onClick={() => editReview(review)} className="rounded px-1 text-[var(--primary)] outline-none hover:underline focus-visible:ring-2 focus-visible:ring-[var(--primary)]">Edit</button>
+                  <button type="button" onClick={() => removeReview(review.id)} className="rounded px-1 text-red-600 outline-none hover:underline focus-visible:ring-2 focus-visible:ring-red-500">Delete</button>
                 </div>
               )}
 
@@ -201,7 +201,7 @@ export default function PlaceReviews({
 
         <div className="mb-6">
 
-          <p className="text-sm font-semibold uppercase tracking-wide text-blue-600 dark:text-blue-400">
+        <p className="text-sm font-semibold uppercase tracking-wide text-[var(--primary)]">
             Share your experience
           </p>
 

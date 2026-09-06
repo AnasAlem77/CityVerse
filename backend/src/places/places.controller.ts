@@ -11,6 +11,8 @@ import {
 import { GetPlacesOptions, PlacesService } from './places.service';
 import { CurationService } from './curation.service';
 import { JwtGuard } from '../auth/jwt.guard';
+import { AdminGuard } from '../auth/guards/admin.guard';
+import { RateLimitGuard } from '../auth/guards/rate-limit.guard';
 import { CreatePlaceDto } from './dto/create-place.dto';
 
 @Controller('places')
@@ -23,8 +25,8 @@ export class PlacesController {
     private readonly curationService: CurationService,
   ) {}
 
-  // Admin / authenticated
-  @UseGuards(JwtGuard)
+  // Admin only: this mutates shared production place data.
+  @UseGuards(JwtGuard, AdminGuard)
   @Post()
   createPlace(
     @Body() data: CreatePlaceDto,
@@ -54,6 +56,7 @@ export class PlacesController {
 
   // Public
   @Get()
+  @UseGuards(RateLimitGuard)
   getPlaces(
     @Query('page') page?: string,
     @Query('limit') limit?: string,

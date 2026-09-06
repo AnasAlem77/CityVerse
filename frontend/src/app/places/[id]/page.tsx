@@ -15,6 +15,9 @@ import {
 import PlaceReviews from "@/components/PlaceReviews/PlaceReviews";
 import PlaceRating from "@/components/PlaceRating/PlaceRating";
 import Directions from "@/components/Directions/DirectionsLoader";
+import PlaceGallery from "@/components/PlaceGallery/PlaceGallery";
+import MediaFallback from "@/components/MediaFallback/MediaFallback";
+import SavePlaceButton from "@/components/SavePlaceButton/SavePlaceButton";
 
 type City = {
   id: string;
@@ -25,6 +28,11 @@ type PlaceImage = {
   id: string;
   url?: string;
   imageUrl?: string;
+  source?: string | null;
+  sourceUrl?: string | null;
+  license?: string | null;
+  author?: string | null;
+  attribution?: string | null;
 };
 
 type Review = {
@@ -217,9 +225,6 @@ export default function PlacePage() {
 
   const placeIsArabic = isArabic(place.name);
 
-  const primaryImage =
-    place.images?.[0]?.url ?? place.images?.[0]?.imageUrl ?? null;
-
   return (
     <div className="min-h-screen bg-[var(--background)]">
       <main className="mx-auto max-w-7xl px-6 pb-20 pt-32 lg:px-8">
@@ -240,16 +245,10 @@ export default function PlacePage() {
         {/* Hero */}
         <section className="overflow-hidden rounded-3xl border border-[var(--border)] bg-[var(--card)] shadow-sm">
           <div className="relative aspect-[16/7] overflow-hidden bg-[var(--secondary)]/10">
-            {primaryImage ? (
-              <img
-                src={primaryImage}
-                alt={place.name}
-                className="h-full w-full object-cover"
-              />
+            {place.images?.length ? (
+              <PlaceGallery images={place.images} placeName={place.name} />
             ) : (
-              <div className="flex h-full items-center justify-center">
-                <MapPin className="h-16 w-16 text-[var(--secondary)]/30" />
-              </div>
+              <MediaFallback label={`${place.name} image unavailable`} />
             )}
 
             {place.category && (
@@ -299,6 +298,7 @@ export default function PlacePage() {
                   reviewsCount={place.reviewsCount}
                 />
                 <PlaceRating placeId={place.id} />
+                <SavePlaceButton placeId={place.id} />
               </div>
             </div>
 
