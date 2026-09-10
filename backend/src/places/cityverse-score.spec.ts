@@ -24,6 +24,9 @@ describe('CityVerse Score', () => {
   it('does not require complete metadata', () => {
     expect(calculateCityVerseScore(base)).toBeGreaterThan(0);
   });
+  it('omits only the description signal when description is null', () => {
+    expect(calculateCityVerseScore({ ...base, description: null })).toBeGreaterThan(0);
+  });
   it('rewards data quality without calling it a user rating', () => {
     expect(
       calculateCityVerseScore({

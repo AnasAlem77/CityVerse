@@ -27,12 +27,12 @@ function searchTerms(value: string) {
   return [...terms];
 }
 
-function searchScore(place: { name: string; category: string; subtype: string | null; description: string; address: string | null; city: { name: string } }, terms: string[]) {
+function searchScore(place: { name: string; category: string; subtype: string | null; description: string | null; address: string | null; city: { name: string } }, terms: string[]) {
   const name = place.name.toLowerCase();
   const category = place.category.toLowerCase();
   const subtype = place.subtype?.toLowerCase() ?? '';
   const city = place.city.name.toLowerCase();
-  const description = place.description.toLowerCase();
+  const description = place.description?.toLowerCase() ?? '';
   const address = place.address?.toLowerCase() ?? '';
   return Math.max(...terms.map((term) => {
     if (name === term) return 1000;

@@ -159,7 +159,7 @@ model Place {
   osmId String? @unique
 
   name          String
-  description   String
+  description   String?
   category      String
   subtype       String?
 

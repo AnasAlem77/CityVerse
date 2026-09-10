@@ -12,4 +12,11 @@ describe('RecommendationsService', () => {
     expect(first.recommendations).not.toContainEqual(expect.objectContaining({ placeId: 'source' }));
     expect(prisma.place.findMany).toHaveBeenCalledWith(expect.objectContaining({ take: 100 }));
   });
+
+  it('ranks candidates with a null description', async () => {
+    const candidate = (id: string) => ({ id, name: id, category: 'restaurant', subtype: null, description: null, address: null, website: null, phone: null, openingHours: null, cuisine: null, wheelchair: null, internetAccess: null, osmId: id, latitude: 48.85, longitude: 2.35, cityId: 'city-1', _count: { reviews: 0 } });
+    const prisma = { place: { findMany: jest.fn().mockResolvedValue([candidate('a')]) } } as any;
+    const service = new RecommendationsService(prisma);
+    await expect(service.recommend({ mode: 'city', cityId: 'city-1' })).resolves.toMatchObject({ recommendations: [expect.objectContaining({ placeId: 'a' })] });
+  });
 });

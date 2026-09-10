@@ -1,6 +1,6 @@
 export class CreatePlaceDto {
   name: string;
-  description: string;
+  description?: string | null;
   category: string;
   subtype?: string;
 

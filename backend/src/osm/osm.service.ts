@@ -559,7 +559,7 @@ export class OsmService {
       id: string;
       osmId: string | null;
       name: string;
-      description: string;
+      description: string | null;
       category: string;
       address: string | null;
       website: string | null;
@@ -936,12 +936,26 @@ export class OsmService {
     const address =
       this.buildAddress(tags);
 
+    const localizedDescription = Object.entries(tags)
+      .filter(
+        ([key, value]) =>
+          /^description:[a-z]{2,3}(?:-[A-Za-z]+)?$/i.test(key) &&
+          Boolean(value.trim()),
+      )
+      .sort(([left], [right]) => {
+        if (left === 'description:en') return -1;
+        if (right === 'description:en') return 1;
+        return left.localeCompare(right);
+      })[0]?.[1]
+      ?.trim();
+
     return {
       id: `${element.type}/${element.id}`,
       name,
       description:
         tags.description?.trim() ||
         tags.comment?.trim() ||
+        localizedDescription ||
         '',
       category,
       subtype,

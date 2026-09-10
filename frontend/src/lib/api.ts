@@ -60,7 +60,7 @@ export type PlaceSummary = {
   id: string;
   osmId: string | null;
   name: string;
-  description: string;
+  description: string | null;
   category: string;
   subtype: string | null;
   address: string | null;

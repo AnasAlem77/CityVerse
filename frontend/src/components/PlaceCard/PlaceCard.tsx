@@ -13,7 +13,7 @@ const isArabic = (text: string) =>
 type PlaceCardProps = {
   id: string;
   name: string;
-  description: string;
+  description: string | null;
   category: string;
   subtype?: string | null;
   address?: string | null;
@@ -270,13 +270,6 @@ export default function PlaceCard({
         {description && (
           <p className="mt-3 line-clamp-3 text-sm leading-6 text-[var(--muted)]">
             {description}
-          </p>
-        )}
-
-        {/* Fallback when no extra data exists */}
-        {!description && !address && (
-          <p className="mt-3 text-sm leading-6 text-[var(--muted)]">
-            Discover this amazing place.
           </p>
         )}
 

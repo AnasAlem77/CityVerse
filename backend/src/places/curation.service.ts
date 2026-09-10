@@ -16,7 +16,7 @@ type Candidate = {
   id: string;
   osmId: string | null;
   name: string;
-  description: string;
+  description: string | null;
   category: string;
   subtype: string | null;
   address: string | null;
@@ -71,7 +71,7 @@ export function scoreRawCandidate(candidate: Candidate) {
   const tags = tagsOf(candidate);
   const has = (...keys: string[]) => keys.some((key) => Boolean(tags[key]));
   const name = candidate.name.trim();
-  const description = candidate.description.trim();
+  const description = candidate.description?.trim() ?? '';
   const qualityScore =
     (name.length >= 3 ? 8 : 0) +
     (name.length >= 8 ? 3 : 0) +
@@ -154,7 +154,7 @@ export function scoreRawCandidate(candidate: Candidate) {
 function qualityScore(candidate: Candidate) {
   return [
     candidate.name.trim().length > 0,
-    candidate.description.trim().length > 0,
+    (candidate.description?.trim().length ?? 0) > 0,
     Boolean(candidate.address),
     Boolean(candidate.website),
     Boolean(candidate.phone),

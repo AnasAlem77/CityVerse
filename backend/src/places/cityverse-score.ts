@@ -1,6 +1,6 @@
 export type ScoreablePlace = {
   name: string;
-  description: string;
+  description: string | null;
   category: string;
   subtype?: string | null;
   address?: string | null;
@@ -19,7 +19,7 @@ export function calculateCityVerseScoreBreakdown(place: ScoreablePlace) {
       place.name.trim().length >= 3,
       Number.isFinite(place.osmId ? 1 : 0),
       place.category.length > 0,
-      place.description.trim().length >= 16,
+      (place.description?.trim().length ?? 0) >= 16,
     ].filter(Boolean).length * 6;
   const completeness =
     [

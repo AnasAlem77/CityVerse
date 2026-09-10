@@ -11,7 +11,7 @@ type Candidate = {
   name: string;
   category: string;
   subtype: string | null;
-  description: string;
+  description: string | null;
   address: string | null;
   website: string | null;
   phone: string | null;
