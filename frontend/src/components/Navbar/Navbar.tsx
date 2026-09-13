@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   Compass,
   Heart,
@@ -15,12 +15,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 
 import ThemeToggle from "../ThemeToggle/ThemeToggle";
-
-type UserData = {
-  id: string;
-  email: string;
-  name: string;
-};
+import { useAuth } from "../AuthProvider/AuthProvider";
 
 const links = [
   {
@@ -44,39 +39,11 @@ const links = [
 export default function Navbar() {
   const router = useRouter();
 
-  const [user, setUser] = useState<UserData | null>(null);
+  const { user, signOut } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  useEffect(() => {
-    const loadUser = () => {
-      const storedUser = localStorage.getItem("cityverse_user");
-
-      if (!storedUser) {
-        setUser(null);
-        return;
-      }
-
-      try {
-        setUser(JSON.parse(storedUser));
-      } catch {
-        setUser(null);
-      }
-    };
-
-    loadUser();
-
-    window.addEventListener("storage", loadUser);
-
-    return () => {
-      window.removeEventListener("storage", loadUser);
-    };
-  }, []);
-
   function logout() {
-    localStorage.removeItem("cityverse_token");
-    localStorage.removeItem("cityverse_user");
-
-    setUser(null);
+    signOut();
     setMobileOpen(false);
 
     router.push("/");

@@ -140,24 +140,30 @@ export default function PlaceCard({
         <div
           className="
             absolute
-            bottom-4
-            left-4
+            bottom-2
+            left-2
             rounded-full
             border
             border-white/40
             bg-white/80
-            px-4
-            py-2
-            text-xs
+            px-2.5
+            py-1.5
+            text-[10px]
             font-bold
             uppercase
-            tracking-wider
+            tracking-wide
             text-slate-800
             shadow-lg
             backdrop-blur-md
             dark:border-white/10
             dark:bg-black/40
             dark:text-white
+            sm:bottom-4
+            sm:left-4
+            sm:px-4
+            sm:py-2
+            sm:text-xs
+            sm:tracking-wider
           "
         >
           {subtype ? `${category} · ${subtype.replaceAll("_", " ")}` : category || "Place"}

@@ -66,10 +66,9 @@ export default function RegisterPage() {
       className="
         flex min-h-screen
         items-center justify-center
-        bg-slate-50
+        bg-[var(--background)]
         px-5 py-12
         transition-colors
-        dark:bg-slate-950
       "
     >
       <div className="w-full max-w-md">
@@ -82,18 +81,18 @@ export default function RegisterPage() {
               flex h-11 w-11
               items-center justify-center
               rounded-xl
-              bg-blue-600
+              bg-[var(--primary)]
               text-white
               shadow-md
-              shadow-blue-600/20
+              shadow-[var(--primary)]/20
             "
           >
             <Compass size={23} />
           </div>
 
-          <span className="text-xl font-black text-slate-900 dark:text-white">
+          <span className="text-xl font-black text-[var(--foreground)]">
             City
-            <span className="text-blue-600 dark:text-blue-400">
+            <span className="text-[var(--primary)]">
               Verse
             </span>
           </span>
@@ -102,18 +101,16 @@ export default function RegisterPage() {
         <div
           className="
             mt-8 rounded-3xl
-            border border-slate-200
-            bg-white p-7
+            border border-[var(--border)]
+            bg-[var(--card)] p-5 sm:p-7
             shadow-sm
-            dark:border-slate-800
-            dark:bg-slate-900
           "
         >
-          <h1 className="text-2xl font-black text-slate-900 dark:text-white">
+          <h1 className="text-2xl font-black text-[var(--foreground)]">
             Create your account
           </h1>
 
-          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+          <p className="mt-2 text-sm text-[var(--muted)]">
             Join CityVerse and start exploring.
           </p>
 
@@ -124,7 +121,7 @@ export default function RegisterPage() {
             <div>
               <label
                 htmlFor="name"
-                className="text-sm font-semibold text-slate-700 dark:text-slate-300"
+                className="text-sm font-semibold text-[var(--foreground)]"
               >
                 Name
               </label>
@@ -132,7 +129,7 @@ export default function RegisterPage() {
               <div className="relative mt-2">
                 <User
                   size={18}
-                  className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+                  className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--muted)]"
                 />
 
                 <input
@@ -145,19 +142,16 @@ export default function RegisterPage() {
                   placeholder="Your name"
                   className="
                     w-full rounded-xl
-                    border border-slate-200
-                    bg-slate-50
+                    border border-[var(--border)]
+                    bg-[var(--background)]
                     py-3 pl-11 pr-4
-                    text-sm text-slate-900
+                    text-sm text-[var(--foreground)]
                     outline-none
                     transition
-                    focus:border-blue-500
-                    focus:bg-white
+                    focus:border-[var(--primary)]
+                    focus:bg-[var(--card)]
                     focus:ring-4
-                    focus:ring-blue-500/10
-                    dark:border-slate-700
-                    dark:bg-slate-800
-                    dark:text-white
+                    focus:ring-[var(--primary)]/10
                   "
                 />
               </div>
@@ -166,7 +160,7 @@ export default function RegisterPage() {
             <div>
               <label
                 htmlFor="register-email"
-                className="text-sm font-semibold text-slate-700 dark:text-slate-300"
+                className="text-sm font-semibold text-[var(--foreground)]"
               >
                 Email
               </label>
@@ -174,7 +168,7 @@ export default function RegisterPage() {
               <div className="relative mt-2">
                 <Mail
                   size={18}
-                  className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+                  className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--muted)]"
                 />
 
                 <input
@@ -187,19 +181,16 @@ export default function RegisterPage() {
                   placeholder="you@example.com"
                   className="
                     w-full rounded-xl
-                    border border-slate-200
-                    bg-slate-50
+                    border border-[var(--border)]
+                    bg-[var(--background)]
                     py-3 pl-11 pr-4
-                    text-sm text-slate-900
+                    text-sm text-[var(--foreground)]
                     outline-none
                     transition
-                    focus:border-blue-500
-                    focus:bg-white
+                    focus:border-[var(--primary)]
+                    focus:bg-[var(--card)]
                     focus:ring-4
-                    focus:ring-blue-500/10
-                    dark:border-slate-700
-                    dark:bg-slate-800
-                    dark:text-white
+                    focus:ring-[var(--primary)]/10
                   "
                 />
               </div>
@@ -208,7 +199,7 @@ export default function RegisterPage() {
             <div>
               <label
                 htmlFor="register-password"
-                className="text-sm font-semibold text-slate-700 dark:text-slate-300"
+                className="text-sm font-semibold text-[var(--foreground)]"
               >
                 Password
               </label>
@@ -216,7 +207,7 @@ export default function RegisterPage() {
               <div className="relative mt-2">
                 <Lock
                   size={18}
-                  className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+                  className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--muted)]"
                 />
 
                 <input
@@ -229,19 +220,16 @@ export default function RegisterPage() {
                   placeholder="••••••••"
                   className="
                     w-full rounded-xl
-                    border border-slate-200
-                    bg-slate-50
+                    border border-[var(--border)]
+                    bg-[var(--background)]
                     py-3 pl-11 pr-4
-                    text-sm text-slate-900
+                    text-sm text-[var(--foreground)]
                     outline-none
                     transition
-                    focus:border-blue-500
-                    focus:bg-white
+                    focus:border-[var(--primary)]
+                    focus:bg-[var(--card)]
                     focus:ring-4
-                    focus:ring-blue-500/10
-                    dark:border-slate-700
-                    dark:bg-slate-800
-                    dark:text-white
+                    focus:ring-[var(--primary)]/10
                   "
                 />
               </div>
@@ -266,13 +254,13 @@ export default function RegisterPage() {
                 flex w-full
                 items-center justify-center gap-2
                 rounded-xl
-                bg-blue-600
+                bg-[var(--primary)]
                 px-5 py-3
                 font-bold text-white
                 shadow-sm
                 transition-all
                 hover:-translate-y-0.5
-                hover:bg-blue-700
+                hover:bg-[var(--primary-hover)]
                 hover:shadow-md
                 disabled:cursor-not-allowed
                 disabled:opacity-60
@@ -291,11 +279,11 @@ export default function RegisterPage() {
             </button>
           </form>
 
-          <p className="mt-6 text-center text-sm text-slate-500 dark:text-slate-400">
+          <p className="mt-6 text-center text-sm text-[var(--muted)]">
             Already have an account?{" "}
             <Link
               href="/login"
-              className="font-bold text-blue-600 hover:text-blue-700 dark:text-blue-400"
+              className="font-bold text-[var(--primary)] hover:text-[var(--primary-hover)]"
             >
               Login
             </Link>

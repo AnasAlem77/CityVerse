@@ -193,7 +193,7 @@ export default function Hero({
             CONTENT
         ===================================================== */}
 
-        <div className="mx-auto flex min-h-[calc(100svh-80px)] max-w-7xl items-center px-5 py-16 sm:px-6 lg:px-8">
+        <div className="mx-auto flex min-h-[calc(100svh-80px)] max-w-7xl items-start px-5 py-12 sm:items-center sm:px-6 sm:py-16 lg:px-8">
 
           <div className="grid w-full items-center gap-14 lg:grid-cols-[1.1fr_0.9fr]">
 

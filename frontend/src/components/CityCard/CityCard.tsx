@@ -24,6 +24,7 @@ export default function CityCard({
       className="
         group
         block
+        min-w-0
         overflow-hidden
         rounded-3xl
         border
@@ -38,8 +39,8 @@ export default function CityCard({
       "
     >
       {/* Image */}
-      <div className="relative h-60 overflow-hidden">
-        {image ? <Image src={image} alt={name} fill className="object-cover transition-transform duration-700 group-hover:scale-105" sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" /> : <MediaFallback label={`${name} image unavailable`} />}
+      <div className="relative h-40 overflow-hidden sm:h-60">
+        {image ? <Image src={image} alt={name} fill className="object-cover transition-transform duration-700 group-hover:scale-105" sizes="(max-width: 640px) 50vw, (max-width: 1024px) 50vw, 33vw" /> : <MediaFallback label={`${name} image unavailable`} />}
 
         {/* Image overlay */}
         <div
@@ -57,8 +58,8 @@ export default function CityCard({
         <div
           className="
             absolute
-            bottom-4
-            left-4
+            bottom-2
+            left-2
             flex
             items-center
             gap-2
@@ -66,22 +67,22 @@ export default function CityCard({
             border
             border-white/30
             bg-black/30
-            px-4
-            py-2
-            text-sm
+            px-2.5
+            py-1.5
+            text-xs
             font-bold
             text-white
             shadow-lg
             backdrop-blur-md
           "
         >
-          <MapPin size={14} className="text-orange-400" />
+          <MapPin size={12} className="text-orange-400 sm:h-[14px] sm:w-[14px]" />
           {country}
         </div>
       </div>
 
       {/* Content */}
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
         <p className="text-xs font-bold uppercase tracking-[0.18em] text-orange-500">
           Destination
         </p>
@@ -89,10 +90,12 @@ export default function CityCard({
         <h3
           className="
             mt-2
-            text-2xl
+            text-lg
+            sm:text-2xl
             font-black
             tracking-tight
             text-[var(--foreground)]
+            break-words
             transition-colors
             duration-300
             group-hover:text-orange-500
@@ -101,22 +104,24 @@ export default function CityCard({
           {name}
         </h3>
 
-        <p className="mt-3 line-clamp-3 text-sm leading-6 text-[var(--muted)]">
+        <p className="mt-2 line-clamp-3 text-xs leading-5 text-[var(--muted)] sm:mt-3 sm:text-sm sm:leading-6">
           {description ??
             "Discover amazing places and experiences in this city."}
         </p>
 
         {/* Bottom */}
-        <div className="mt-6 flex items-center justify-between">
-          <span className="text-sm font-bold text-[var(--foreground)]">
+        <div className="mt-4 flex items-center justify-between sm:mt-6">
+          <span className="text-xs font-bold text-[var(--foreground)] sm:text-sm">
             Explore city
           </span>
 
           <span
             className="
               flex
-              h-10
-              w-10
+              h-8
+              w-8
+              sm:h-10
+              sm:w-10
               items-center
               justify-center
               rounded-full
@@ -129,7 +134,7 @@ export default function CityCard({
               group-hover:text-white
             "
           >
-            <ArrowRight size={18} />
+            <ArrowRight size={16} className="sm:h-[18px] sm:w-[18px]" />
           </span>
         </div>
       </div>

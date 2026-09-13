@@ -15,7 +15,7 @@ export default async function CitiesPage({ searchParams }: CitiesPageProps) {
 
   return (
     <main className="min-h-screen bg-[var(--background)]">
-      <section className="mx-auto max-w-7xl px-6 py-16 lg:px-8">
+      <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-16 lg:px-8">
         {/* Header */}
         <div className="mb-12">
           <p className="text-sm font-bold uppercase tracking-[0.2em] text-[var(--primary)]">
@@ -46,7 +46,7 @@ export default async function CitiesPage({ searchParams }: CitiesPageProps) {
             </p>
           </div>
         ) : (
-          <div className="grid gap-7 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-2 gap-3 sm:gap-7 lg:grid-cols-3">
             {cities.map((city) => (
               <CityCard
                 key={city.id}

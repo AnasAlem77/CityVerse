@@ -75,6 +75,25 @@ body {
     color 0.5s ease;
 }
 
+/* Leaflet must be contained by the card that owns it.  Keeping this scoped
+   avoids Leaflet pane z-indexes or its internal positioning escaping into
+   other pages. */
+.cityverse-map-frame {
+  position: relative;
+  isolation: isolate;
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.cityverse-map-frame .leaflet-container {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+}
+
 /* ============================================================
    ARABIC TYPOGRAPHY
 ============================================================ */

@@ -5,6 +5,7 @@ import "./globals.css";
 import Navbar from "@/components/Navbar/Navbar";
 import Footer from "@/components/Footer/Footer";
 import ThemeProvider from "@/components/ThemeProvider/ThemeProvider";
+import AuthProvider from "@/components/AuthProvider/AuthProvider";
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
@@ -43,13 +44,15 @@ export default function RootLayout({
     >
       <body className="min-h-screen">
         <ThemeProvider>
-          <Navbar />
+          <AuthProvider>
+            <Navbar />
 
-          <main className="min-h-screen">
-            {children}
-          </main>
+            <main className="min-h-screen">
+              {children}
+            </main>
 
-          <Footer />
+            <Footer />
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>

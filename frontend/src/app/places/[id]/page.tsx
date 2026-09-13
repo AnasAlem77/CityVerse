@@ -16,8 +16,8 @@ import PlaceReviews from "@/components/PlaceReviews/PlaceReviews";
 import PlaceRating from "@/components/PlaceRating/PlaceRating";
 import Directions from "@/components/Directions/DirectionsLoader";
 import PlaceGallery from "@/components/PlaceGallery/PlaceGallery";
-import MediaFallback from "@/components/MediaFallback/MediaFallback";
 import SavePlaceButton from "@/components/SavePlaceButton/SavePlaceButton";
+import PlaceMap from "@/components/PlaceMap/PlaceMapLoader";
 
 type City = {
   id: string;
@@ -180,7 +180,7 @@ export default function PlacePage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-[var(--background)]">
-        <section className="mx-auto max-w-7xl px-6 pb-16 pt-32 lg:px-8">
+        <section className="mx-auto max-w-7xl px-4 pb-16 pt-8 sm:px-6 sm:pt-12 lg:px-8">
           <div className="animate-pulse space-y-8">
             <div className="h-5 w-32 rounded bg-[var(--secondary)]/10" />
 
@@ -200,7 +200,7 @@ export default function PlacePage() {
   if (error || !place) {
     return (
       <div className="min-h-screen bg-[var(--background)]">
-        <section className="mx-auto max-w-3xl px-6 pb-16 pt-32 text-center lg:px-8">
+        <section className="mx-auto max-w-3xl px-4 pb-16 pt-8 text-center sm:px-6 sm:pt-12 lg:px-8">
           <Link
             href="/places"
             className="mb-8 inline-flex items-center gap-2 text-sm font-semibold text-[var(--muted)] transition-colors hover:text-[var(--primary)]"
@@ -224,10 +224,18 @@ export default function PlacePage() {
   }
 
   const placeIsArabic = isArabic(place.name);
+  const latitude = Number(place.latitude);
+  const longitude = Number(place.longitude);
+  const hasValidCoordinates = Number.isFinite(latitude)
+    && Number.isFinite(longitude)
+    && latitude >= -90
+    && latitude <= 90
+    && longitude >= -180
+    && longitude <= 180;
 
   return (
     <div className="min-h-screen bg-[var(--background)]">
-      <main className="mx-auto max-w-7xl px-6 pb-20 pt-32 lg:px-8">
+      <main className="mx-auto max-w-7xl px-4 pb-20 pt-8 sm:px-6 sm:pt-12 lg:px-8">
         <Link
           href={
             place.city?.id
@@ -244,12 +252,8 @@ export default function PlacePage() {
 
         {/* Hero */}
         <section className="overflow-hidden rounded-3xl border border-[var(--border)] bg-[var(--card)] shadow-sm">
-          <div className="relative aspect-[16/7] overflow-hidden bg-[var(--secondary)]/10">
-            {place.images?.length ? (
-              <PlaceGallery images={place.images} placeName={place.name} />
-            ) : (
-              <MediaFallback label={`${place.name} image unavailable`} />
-            )}
+          {place.images?.some((image) => image.url ?? image.imageUrl) && <div className="relative aspect-[16/7] overflow-hidden bg-[var(--secondary)]/10">
+            <PlaceGallery images={place.images} placeName={place.name} />
 
             {place.category && (
               <div className="absolute left-6 top-6">
@@ -260,7 +264,7 @@ export default function PlacePage() {
                 </span>
               </div>
             )}
-          </div>
+          </div>}
 
           <div className="p-6 md:p-8">
             <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
@@ -412,29 +416,17 @@ export default function PlacePage() {
               </p>
             </div>
 
-            <div className="flex min-h-[320px] items-center justify-center bg-[var(--secondary)]/5 p-8">
-              <div className="text-center">
-                <MapPin className="mx-auto h-12 w-12 text-[var(--primary)]" />
-
-                <p className="mt-4 font-bold text-[var(--foreground)]">
-                  {place.city?.name ?? "Location"}
-                </p>
-
-                <p className="mt-1 text-sm text-[var(--muted)]">
-                  Coordinates available
-                </p>
-
-                <a
-                  href={`https://www.google.com/maps/search/?api=1&query=${place.latitude},${place.longitude}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-5 inline-flex items-center gap-2 rounded-xl bg-[var(--primary)] px-4 py-2.5 text-sm font-bold text-white transition hover:opacity-90"
-                >
-                  Open in Google Maps
-                  <ExternalLink className="h-4 w-4" />
-                </a>
+            {hasValidCoordinates ? (
+              <PlaceMap latitude={latitude} longitude={longitude} name={place.name} />
+            ) : (
+              <div className="flex min-h-[280px] items-center justify-center bg-[var(--secondary)]/5 p-8 text-center">
+                <div>
+                  <MapPin className="mx-auto h-12 w-12 text-[var(--primary)]" />
+                  <p className="mt-4 font-bold text-[var(--foreground)]">Location unavailable</p>
+                  <p className="mt-1 text-sm text-[var(--muted)]">This place does not have valid coordinates.</p>
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </section>
 

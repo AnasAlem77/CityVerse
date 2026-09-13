@@ -27,12 +27,26 @@ function clustered(places: MapPlace[]) {
   return [...groups.values()].map((group) => group[0]);
 }
 
+function MapResize() {
+  const map = useMap();
+  useEffect(() => {
+    const frame = map.getContainer().parentElement;
+    if (!frame) return;
+    const observer = new ResizeObserver(() => map.invalidateSize());
+    observer.observe(frame);
+    map.invalidateSize();
+    return () => observer.disconnect();
+  }, [map]);
+  return null;
+}
+
 export default function CityMap({ cityId, latitude, longitude, category }: Props) {
   const [places, setPlaces] = useState<MapPlace[]>([]); const [state, setState] = useState("loading");
   return <div className="overflow-hidden rounded-3xl border border-[var(--border)] bg-[var(--card)]">
-    <div className="relative h-[300px] sm:h-[360px] lg:h-[420px]">
+    <div className="cityverse-map-frame h-[280px] sm:h-[360px] lg:h-[420px]">
       <MapContainer center={[latitude, longitude]} zoom={12} scrollWheelZoom className="h-full w-full">
         <TileLayer attribution='&copy; OpenStreetMap contributors' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+        <MapResize />
         <ViewportLoader cityId={cityId} category={category} onPlaces={setPlaces} onState={setState} />
         {clustered(places).map((place) => <CircleMarker key={place.id} center={[Number(place.latitude), Number(place.longitude)]} radius={7} pathOptions={{ color: "#0f766e", fillColor: "#14b8a6", fillOpacity: 0.85 }}><Popup><Link href={`/places/${place.id}`} className="font-semibold text-teal-700 hover:underline">{place.name}</Link><div className="text-xs capitalize">{place.category}{place.subtype ? ` · ${place.subtype}` : ""}</div></Popup></CircleMarker>)}
       </MapContainer>

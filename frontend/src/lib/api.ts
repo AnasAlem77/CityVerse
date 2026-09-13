@@ -344,6 +344,12 @@ async function authorizedRequest(path: string, init: RequestInit = {}) {
   return fetch(`${API_URL}${path}`, { ...init, headers });
 }
 
+export async function updateProfile(data: { name: string }): Promise<User> {
+  const res = await authorizedRequest("/auth/me", { method: "PATCH", body: JSON.stringify(data) });
+  if (!res.ok) throw new Error((await res.json().catch(() => null))?.message || "Unable to update profile");
+  return res.json();
+}
+
 export async function getRatingSummary(placeId: string): Promise<RatingSummary> {
   const res = await fetch(`${API_URL}/ratings/${placeId}`, { cache: "no-store" });
   if (!res.ok) throw new Error("Failed to fetch ratings");

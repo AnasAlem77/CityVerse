@@ -1,9 +1,10 @@
-import { ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
 
 import { PrismaService } from '../prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { RegisterDto } from './dto/register.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 
 @Injectable()
 export class AuthService {
@@ -71,5 +72,16 @@ export class AuthService {
         name: user.name,
       },
     };
+  }
+
+  async updateProfile(userId: string, data: UpdateProfileDto) {
+    const name = data.name?.trim();
+    if (!name) throw new BadRequestException('Name is required');
+    const user = await this.prisma.user.update({
+      where: { id: userId },
+      data: { name },
+      select: { id: true, email: true, name: true },
+    });
+    return user;
   }
 }

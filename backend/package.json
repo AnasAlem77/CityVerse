@@ -20,6 +20,9 @@
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "google:match": "tsx scripts/google-match.ts",
     "photos:acquire": "tsx scripts/acquire-curated-photos.ts",
+    "photos:osv5m:export-places": "tsx scripts/export-osv5m-audit-places.ts",
+    "photos:osv5m:download-metadata": "python3 scripts/download-osv5m-metadata.py",
+    "photos:osv5m:audit": "python3 scripts/audit-osv5m-coverage.py --places logs/osv5m-audit/places.json --metadata ${OSV5M_METADATA_PATH:?Set OSV5M_METADATA_PATH to the metadata-only train.csv}",
     "scores:populate": "tsx scripts/populate-cityverse-scores.ts"
   },
   "dependencies": {

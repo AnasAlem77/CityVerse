@@ -13,48 +13,46 @@ import {
 import { useRouter } from "next/navigation";
 import PlaceCard from "@/components/PlaceCard/PlaceCard";
 import { getSavedPlaces, removeSavedPlace, SavedPlace } from "@/lib/api";
-
-type UserData = {
-  id: string;
-  email: string;
-  name: string;
-};
+import { updateProfile } from "@/lib/api";
+import { useAuth } from "@/components/AuthProvider/AuthProvider";
 
 export default function ProfilePage() {
   const router = useRouter();
 
-  const [user, setUser] = useState<UserData | null>(null);
+  const { user, ready, signOut, updateUser } = useAuth();
   const [savedPlaces, setSavedPlaces] = useState<SavedPlace[]>([]);
   const [savedLoading, setSavedLoading] = useState(true);
   const [savedError, setSavedError] = useState("");
+  const [editing, setEditing] = useState(false);
+  const [name, setName] = useState("");
+  const [profileError, setProfileError] = useState("");
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    const storedUser = localStorage.getItem("cityverse_user");
-
-    if (!storedUser) {
-      router.push("/login");
+    if (!ready) return;
+    if (!user) {
+      router.replace("/login");
       return;
     }
 
-    try {
-      setUser(JSON.parse(storedUser));
-      getSavedPlaces()
-        .then(setSavedPlaces)
-        .catch((error) => setSavedError(error instanceof Error ? error.message : "Unable to load saved places."))
-        .finally(() => setSavedLoading(false));
-    } catch {
-      localStorage.removeItem("cityverse_user");
-      localStorage.removeItem("cityverse_token");
-      router.push("/login");
-    }
-  }, [router]);
+    getSavedPlaces()
+      .then(setSavedPlaces)
+      .catch((error) => setSavedError(error instanceof Error ? error.message : "Unable to load saved places."))
+      .finally(() => setSavedLoading(false));
+  }, [ready, router, user]);
 
   function handleLogout() {
-    localStorage.removeItem("cityverse_token");
-    localStorage.removeItem("cityverse_user");
-
+    signOut();
     router.push("/");
     router.refresh();
+  }
+
+  function cancelEdit() { setName(user?.name ?? ""); setProfileError(""); setEditing(false); }
+  async function saveProfile(event: React.FormEvent) {
+    event.preventDefault(); if (saving) return; setProfileError(""); setSaving(true);
+    try { updateUser(await updateProfile({ name })); setEditing(false); }
+    catch (error) { setProfileError(error instanceof Error ? error.message : "Unable to save profile."); }
+    finally { setSaving(false); }
   }
 
   async function removeSaved(placeId: string) {
@@ -66,7 +64,7 @@ export default function ProfilePage() {
     }
   }
 
-  if (!user) {
+  if (!ready || !user) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-[var(--background)]">
         <div className="text-sm text-[var(--muted)]">
@@ -78,17 +76,15 @@ export default function ProfilePage() {
 
   return (
     <main className="min-h-screen bg-[var(--background)]">
-      <div className="mx-auto max-w-4xl px-5 py-10 sm:px-6">
+      <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 sm:py-10">
         <Link
           href="/"
           className="
             inline-flex items-center gap-2
             text-sm font-semibold
-            text-slate-500
+            text-[var(--muted)]
             transition-colors
-            hover:text-blue-600
-            dark:text-slate-400
-            dark:hover:text-blue-400
+            hover:text-[var(--primary)]
           "
         >
           <ArrowLeft size={17} />
@@ -99,11 +95,9 @@ export default function ProfilePage() {
           className="
             mt-8 overflow-hidden
             rounded-3xl
-            border border-slate-200
-            bg-white
+            border border-[var(--border)]
+            bg-[var(--card)]
             shadow-sm
-            dark:border-slate-800
-            dark:bg-slate-900
           "
         >
           <div className="h-32 bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)]" />
@@ -119,8 +113,8 @@ export default function ProfilePage() {
                 text-3xl font-black
                 text-[var(--primary)]
                 shadow-md
-                dark:border-slate-900
-                dark:bg-slate-800
+                dark:border-[var(--card)]
+                dark:bg-[var(--surface)]
                 dark:text-[var(--primary)]
               "
             >
@@ -128,46 +122,44 @@ export default function ProfilePage() {
             </div>
 
             <div className="mt-5">
-              <h1 className="text-3xl font-black text-[var(--foreground)]">
-                {user.name}
-              </h1>
+              {editing ? <form onSubmit={saveProfile} className="max-w-md"><label className="text-xs font-bold uppercase tracking-wide text-[var(--muted)]" htmlFor="profile-name">Name</label><input id="profile-name" value={name} onChange={(event) => setName(event.target.value)} maxLength={100} required className="mt-2 w-full rounded-xl border border-[var(--border)] bg-transparent px-3 py-2 font-semibold text-[var(--foreground)]" />{profileError && <p className="mt-2 text-sm text-red-600">{profileError}</p>}<div className="mt-3 flex flex-wrap gap-2"><button disabled={saving} className="rounded-xl bg-[var(--primary)] px-4 py-2 text-sm font-bold text-white disabled:opacity-60">{saving ? "Saving..." : "Save"}</button><button type="button" onClick={cancelEdit} disabled={saving} className="rounded-xl border border-[var(--border)] px-4 py-2 text-sm font-bold">Cancel</button></div></form> : <><h1 className="text-3xl font-black text-[var(--foreground)]">{user.name}</h1><button type="button" onClick={() => { setName(user.name); setProfileError(""); setEditing(true); }} className="mt-3 rounded-xl border border-[var(--border)] px-4 py-2 text-sm font-bold text-[var(--primary)]">Edit profile</button></>}
 
-              <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+              <p className="mt-1 text-sm text-[var(--muted)]">
                 CityVerse Explorer
               </p>
             </div>
 
             <div className="mt-8 grid gap-4 sm:grid-cols-2">
-              <div className="rounded-2xl bg-slate-50 p-5 dark:bg-slate-800/60">
+              <div className="rounded-2xl bg-[var(--surface-soft)] p-5">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-100 text-blue-600 dark:bg-blue-950 dark:text-blue-400">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--primary)]/15 text-[var(--primary)]">
                     <Mail size={19} />
                   </div>
 
                   <div className="min-w-0">
-                    <p className="text-xs font-bold uppercase tracking-wide text-slate-400">
+                    <p className="text-xs font-bold uppercase tracking-wide text-[var(--muted)]">
                       Email
                     </p>
 
-                    <p className="mt-1 truncate text-sm font-semibold text-slate-900 dark:text-white">
+                    <p className="mt-1 truncate text-sm font-semibold text-[var(--foreground)]">
                       {user.email}
                     </p>
                   </div>
                 </div>
               </div>
 
-              <div className="rounded-2xl bg-slate-50 p-5 dark:bg-slate-800/60">
+              <div className="rounded-2xl bg-[var(--surface-soft)] p-5">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-100 text-blue-600 dark:bg-blue-950 dark:text-blue-400">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--secondary)]/15 text-[var(--secondary)]">
                     <User size={19} />
                   </div>
 
                   <div>
-                    <p className="text-xs font-bold uppercase tracking-wide text-slate-400">
+                    <p className="text-xs font-bold uppercase tracking-wide text-[var(--muted)]">
                       Account
                     </p>
 
-                    <p className="mt-1 text-sm font-semibold text-slate-900 dark:text-white">
+                    <p className="mt-1 text-sm font-semibold text-[var(--foreground)]">
                       Active member
                     </p>
                   </div>
@@ -181,27 +173,24 @@ export default function ProfilePage() {
                 className="
                   flex items-center gap-4
                   rounded-2xl
-                  border border-slate-200
+                  border border-[var(--border)]
                   p-5
                   transition-all
                   hover:-translate-y-0.5
-                  hover:border-blue-300
-                  hover:bg-blue-50
-                  dark:border-slate-700
-                  dark:hover:border-blue-800
-                  dark:hover:bg-blue-950/30
+                  hover:border-[var(--primary)]
+                  hover:bg-[var(--primary)]/5
                 "
               >
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-100 text-blue-600 dark:bg-blue-950 dark:text-blue-400">
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[var(--primary)]/15 text-[var(--primary)]">
                   <Compass size={20} />
                 </div>
 
                 <div>
-                  <h2 className="font-bold text-slate-900 dark:text-white">
+                  <h2 className="font-bold text-[var(--foreground)]">
                     Explore Places
                   </h2>
 
-                  <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                  <p className="mt-1 text-sm text-[var(--muted)]">
                     Discover new destinations
                   </p>
                 </div>
@@ -213,13 +202,12 @@ export default function ProfilePage() {
                 className="
                   flex items-center gap-4
                   rounded-2xl
-                  border border-slate-200
+                  border border-[var(--border)]
                   p-5 text-left
                   transition-all
                   hover:-translate-y-0.5
                   hover:border-pink-300
                   hover:bg-pink-50
-                  dark:border-slate-700
                   dark:hover:border-pink-900
                   dark:hover:bg-pink-950/20
                 "
@@ -229,32 +217,32 @@ export default function ProfilePage() {
                 </div>
 
                 <div>
-                  <h2 className="font-bold text-slate-900 dark:text-white">
+                  <h2 className="font-bold text-[var(--foreground)]">
                     Saved Places
                   </h2>
 
-                  <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                  <p className="mt-1 text-sm text-[var(--muted)]">
                     Your favorite destinations
                   </p>
                 </div>
               </button>
             </div>
 
-            <section id="saved-places" className="mt-10 border-t border-slate-200 pt-8 dark:border-slate-800">
+            <section id="saved-places" className="mt-10 border-t border-[var(--border)] pt-8">
               <div className="flex items-end justify-between gap-4">
                 <div>
                   <p className="text-xs font-bold uppercase tracking-wide text-[var(--primary)]">Your collection</p>
-                  <h2 className="mt-2 text-2xl font-black text-slate-900 dark:text-white">Saved Places</h2>
+                  <h2 className="mt-2 text-2xl font-black text-[var(--foreground)]">Saved Places</h2>
                 </div>
-                {!savedLoading && <span className="text-sm text-slate-500 dark:text-slate-400">{savedPlaces.length} saved</span>}
+                {!savedLoading && <span className="text-sm text-[var(--muted)]">{savedPlaces.length} saved</span>}
               </div>
 
               {savedLoading ? (
-                <p className="mt-5 text-sm text-slate-500 dark:text-slate-400">Loading saved places...</p>
+                <p className="mt-5 text-sm text-[var(--muted)]">Loading saved places...</p>
               ) : savedError ? (
                 <div className="mt-5 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900/60 dark:bg-red-950/20 dark:text-red-300">{savedError}</div>
               ) : savedPlaces.length === 0 ? (
-                <div className="mt-5 rounded-2xl border border-dashed border-slate-300 p-6 text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">Save places you want to revisit and they will appear here.</div>
+                <div className="mt-5 rounded-2xl border border-dashed border-[var(--border-strong)] p-6 text-sm text-[var(--muted)]">Save places you want to revisit and they will appear here.</div>
               ) : (
                 <div className="mt-5 grid gap-5 md:grid-cols-2">
                   {savedPlaces.map(({ place }) => (

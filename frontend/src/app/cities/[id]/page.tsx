@@ -34,7 +34,7 @@ function PlaceCard({ place }: { place: PlaceSummary }) {
       <article className="overflow-hidden rounded-3xl border border-[var(--border)] bg-[var(--card)] transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
         <div className="relative aspect-[16/10] overflow-hidden bg-[var(--secondary)]/10">
           <div className="flex h-full items-center justify-center"><MapPin className="h-10 w-10 text-[var(--secondary)]/40" /></div>
-          <div className="absolute left-4 top-4"><span className="rounded-full bg-[var(--card)]/90 px-3 py-1.5 text-xs font-semibold capitalize text-[var(--secondary)] shadow-sm backdrop-blur-sm">{label(place.category)}{place.subtype ? ` · ${label(place.subtype)}` : ""}</span></div>
+          <div className="absolute left-2 top-2 sm:left-4 sm:top-4"><span className="rounded-full bg-[var(--card)]/90 px-2 py-1 text-[10px] font-semibold capitalize text-[var(--secondary)] shadow-sm backdrop-blur-sm sm:px-3 sm:py-1.5 sm:text-xs">{label(place.category)}{place.subtype ? ` · ${label(place.subtype)}` : ""}</span></div>
         </div>
         <div className="p-5">
           <h3 dir={arabicName ? "rtl" : "ltr"} className={`line-clamp-1 text-xl text-[var(--foreground)] ${arabicName ? "font-arabic font-bold" : "font-black"}`}>{place.name}</h3>
@@ -89,7 +89,7 @@ export default async function CityPage({ params, searchParams }: { params: Promi
 
   return (
     <div className="min-h-screen bg-[var(--background)]">
-      <section className="mx-auto max-w-7xl px-6 pb-16 pt-32 lg:px-8">
+      <section className="mx-auto max-w-7xl px-4 pb-16 pt-8 sm:px-6 sm:pt-12 lg:px-8">
         <div className="mb-8">
           <Link href="/cities" className="mb-6 inline-flex items-center gap-2 text-sm font-semibold text-[var(--muted)] transition-colors hover:text-[var(--primary)]"><ArrowLeft className="h-4 w-4" />Back to cities</Link>
           <h1 dir={cityIsArabic ? "rtl" : "ltr"} className={`text-4xl tracking-tight text-[var(--foreground)] md:text-5xl ${cityIsArabic ? "font-arabic font-bold" : "font-black"}`}>{result.city.name}</h1>
@@ -100,11 +100,11 @@ export default async function CityPage({ params, searchParams }: { params: Promi
 
         <section className="mb-10"><div className="mb-4 flex flex-wrap items-end justify-between gap-3"><div><p className="text-sm font-semibold uppercase tracking-wide text-[var(--primary)]">City map</p><h2 className="mt-1 text-2xl font-black text-[var(--foreground)]">Explore by location</h2></div><Link href={`/cities/${result.city.id}/digital-twin`} className="text-sm font-semibold text-[var(--primary)] hover:underline">Open Digital Twin</Link></div><CityMap cityId={result.city.id} latitude={Number(result.city.latitude)} longitude={Number(result.city.longitude)} category={query.category} /></section>
 
-        <form className="mb-10 grid gap-3 rounded-3xl border border-[var(--border)] bg-[var(--card)] p-5 md:grid-cols-4" method="get">
+        <form className="mb-10 grid min-w-0 gap-3 rounded-3xl border border-[var(--border)] bg-[var(--card)] p-4 sm:p-5 md:grid-cols-4" method="get">
           <input name="search" defaultValue={query.search} placeholder="Search this city" className="rounded-2xl border border-[var(--border)] bg-transparent px-4 py-3 text-sm outline-none focus:border-[var(--primary)]" />
           <select name="category" defaultValue={query.category ?? ""} className="rounded-2xl border border-[var(--border)] bg-transparent px-4 py-3 text-sm capitalize outline-none focus:border-[var(--primary)]"><option value="">All categories</option>{result.categories.map((category) => <option key={category} value={category}>{label(category)}</option>)}</select>
           <select name="subtype" defaultValue={query.subtype ?? ""} className="rounded-2xl border border-[var(--border)] bg-transparent px-4 py-3 text-sm capitalize outline-none focus:border-[var(--primary)]"><option value="">All types</option>{Array.from(new Set(subtypes)).map((subtype) => <option key={subtype} value={subtype}>{label(subtype)}</option>)}</select>
-          <div className="flex gap-3"><select name="sort" defaultValue={query.sort ?? "name_asc"} className="min-w-0 flex-1 rounded-2xl border border-[var(--border)] bg-transparent px-4 py-3 text-sm outline-none focus:border-[var(--primary)]"><option value="name_asc">A-Z</option><option value="name_desc">Z-A</option><option value="newest">Newest</option><option value="most_reviewed">Most reviewed</option></select><button type="submit" className="rounded-2xl bg-[var(--primary)] px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[var(--primary-hover)]">Apply</button></div>
+          <div className="flex min-w-0 flex-col gap-3 sm:flex-row"><select name="sort" defaultValue={query.sort ?? "name_asc"} className="min-w-0 flex-1 rounded-2xl border border-[var(--border)] bg-transparent px-4 py-3 text-sm outline-none focus:border-[var(--primary)]"><option value="name_asc">A-Z</option><option value="name_desc">Z-A</option><option value="newest">Newest</option><option value="most_reviewed">Most reviewed</option></select><button type="submit" className="w-full shrink-0 rounded-2xl bg-[var(--primary)] px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[var(--primary-hover)] sm:w-auto">Apply</button></div>
         </form>
 
         {result.data.length === 0 ? <div className="rounded-3xl border border-[var(--border)] bg-[var(--card)] p-10 text-center"><MapPin className="mx-auto mb-4 h-10 w-10 text-[var(--muted)]" /><h2 className="text-xl font-bold text-[var(--foreground)]">No places found</h2><p className="mt-2 text-sm text-[var(--muted)]">Try another category or search term.</p></div> : <><div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">{result.data.map((place) => <PlaceCard key={place.id} place={place} />)}</div><Pagination id={id} page={result.pagination.currentPage} totalPages={result.pagination.totalPages} query={query} /><p className="mt-4 text-center text-sm text-[var(--muted)]">Total Places: {result.pagination.total.toLocaleString()}</p></>}
