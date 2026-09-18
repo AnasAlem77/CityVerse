@@ -1,4 +1,7 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { Prisma } from '../../generated/prisma/client';
 
 import { PrismaService } from '../prisma/prisma.service';
@@ -6,12 +9,20 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateCityDto } from './dto/create-city.dto';
 import { UpdateCityDto } from './dto/update-city.dto';
 import { calculateCityVerseScore } from '../places/cityverse-score';
+import { PlaceImageService } from '../images/place-image.service';
 
-type PlacesSort = 'name_asc' | 'name_desc' | 'newest' | 'most_reviewed';
+type PlacesSort =
+  | 'name_asc'
+  | 'name_desc'
+  | 'newest'
+  | 'most_reviewed';
 
 @Injectable()
 export class CitiesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly placeImageService: PlaceImageService,
+  ) {}
 
   async createCity(data: CreateCityDto) {
     return this.prisma.city.create({
@@ -20,10 +31,8 @@ export class CitiesService {
         country: data.country,
         description: data.description,
         image: data.image,
-
         featured: data.featured ?? false,
         featuredOrder: data.featuredOrder,
-
         latitude: data.latitude,
         longitude: data.longitude,
         timezone: data.timezone,
@@ -33,15 +42,22 @@ export class CitiesService {
 
   async getCities(page = 1, limit = 12) {
     const safePage = Math.max(1, Math.floor(page));
-    const safeLimit = Math.min(100, Math.max(1, Math.floor(limit)));
+    const safeLimit = Math.min(
+      100,
+      Math.max(1, Math.floor(limit)),
+    );
     const skip = (safePage - 1) * safeLimit;
 
     const [total, data] = await this.prisma.$transaction([
       this.prisma.city.count(),
+
       this.prisma.city.findMany({
         skip,
         take: safeLimit,
-        orderBy: [{ name: 'asc' }, { id: 'asc' }],
+        orderBy: [
+          { name: 'asc' },
+          { id: 'asc' },
+        ],
         include: {
           _count: {
             select: {
@@ -57,7 +73,10 @@ export class CitiesService {
       page: safePage,
       limit: safeLimit,
       total,
-      totalPages: Math.max(1, Math.ceil(total / safeLimit)),
+      totalPages: Math.max(
+        1,
+        Math.ceil(total / safeLimit),
+      ),
     };
   }
 
@@ -104,9 +123,47 @@ export class CitiesService {
   }
 
   async getCityCapabilities(id: string) {
-    const city = await this.prisma.city.findUnique({ where: { id }, select: { id: true, name: true, timezone: true, latitude: true, longitude: true } });
-    if (!city) throw new NotFoundException('City not found');
-    return { city, capabilities: { places: true, map: true, recommendations: true, assistant: true, analytics: true, weather: 'available', routing: true, alerts: 'provider-dependent', traffic: 'unavailable', incidents: 'provider-dependent', transit: 'unavailable', events: 'unavailable', airQuality: 'unavailable', environment: 'provider-dependent', mobility: 'unavailable', temporal: 'limited' } };
+    const city =
+      await this.prisma.city.findUnique({
+        where: {
+          id,
+        },
+
+        select: {
+          id: true,
+          name: true,
+          timezone: true,
+          latitude: true,
+          longitude: true,
+        },
+      });
+
+    if (!city) {
+      throw new NotFoundException('City not found');
+    }
+
+    return {
+      city,
+
+      capabilities: {
+        places: true,
+        map: true,
+        recommendations: true,
+        assistant: true,
+        analytics: true,
+        weather: 'available',
+        routing: true,
+        alerts: 'provider-dependent',
+        traffic: 'unavailable',
+        incidents: 'provider-dependent',
+        transit: 'unavailable',
+        events: 'unavailable',
+        airQuality: 'unavailable',
+        environment: 'provider-dependent',
+        mobility: 'unavailable',
+        temporal: 'limited',
+      },
+    };
   }
 
   async getCityPlaces(
@@ -138,9 +195,15 @@ export class CitiesService {
       throw new NotFoundException('City not found');
     }
 
-    const limit = Math.min(Math.max(filters.limit ?? 12, 1), 100);
+    const limit = Math.min(
+      Math.max(filters.limit ?? 12, 1),
+      100,
+    );
 
-    const offset = Math.max(filters.offset ?? 0, 0);
+    const offset = Math.max(
+      filters.offset ?? 0,
+      0,
+    );
 
     const sort: PlacesSort =
       filters.sort === 'name_desc' ||
@@ -163,12 +226,38 @@ export class CitiesService {
 
     if (filters.search?.trim()) {
       const search = filters.search.trim();
+
       where.OR = [
-        { name: { contains: search, mode: 'insensitive' } },
-        { description: { contains: search, mode: 'insensitive' } },
-        { address: { contains: search, mode: 'insensitive' } },
-        { category: { contains: search, mode: 'insensitive' } },
-        { subtype: { contains: search, mode: 'insensitive' } },
+        {
+          name: {
+            contains: search,
+            mode: 'insensitive',
+          },
+        },
+        {
+          description: {
+            contains: search,
+            mode: 'insensitive',
+          },
+        },
+        {
+          address: {
+            contains: search,
+            mode: 'insensitive',
+          },
+        },
+        {
+          category: {
+            contains: search,
+            mode: 'insensitive',
+          },
+        },
+        {
+          subtype: {
+            contains: search,
+            mode: 'insensitive',
+          },
+        },
       ];
     }
 
@@ -202,12 +291,15 @@ export class CitiesService {
                 },
               ];
 
-    const [places, total, categories, subtypes] = await Promise.all([
+    const [
+      places,
+      total,
+      categories,
+      subtypes,
+    ] = await Promise.all([
       this.prisma.place.findMany({
         where,
-
         orderBy,
-
         skip: offset,
         take: limit,
 
@@ -235,6 +327,8 @@ export class CitiesService {
 
           createdAt: true,
           updatedAt: true,
+
+          images: true,
 
           _count: {
             select: {
@@ -271,32 +365,57 @@ export class CitiesService {
             not: null,
           },
         },
-        distinct: ['category', 'subtype'],
+
+        distinct: [
+          'category',
+          'subtype',
+        ],
+
         select: {
           category: true,
           subtype: true,
         },
-        orderBy: [{ category: 'asc' }, { subtype: 'asc' }],
+
+        orderBy: [
+          {
+            category: 'asc',
+          },
+          {
+            subtype: 'asc',
+          },
+        ],
       }),
     ]);
 
-    const data = places.map((place) => ({
-      ...place,
-      cityVerseScore: Number(calculateCityVerseScore(place).toFixed(1)),
+    const data = await Promise.all(
+      places.map(async (place) => ({
+        ...place,
 
-      reviewsCount: place._count.reviews,
+        images:
+          await this.placeImageService.signPlaceImages(
+            place.images,
+          ),
 
-      averageRating: undefined,
+        cityVerseScore: Number(
+          calculateCityVerseScore(place).toFixed(1),
+        ),
 
-      _count: undefined,
-    }));
+        reviewsCount: place._count.reviews,
+
+        averageRating: undefined,
+
+        _count: undefined,
+      })),
+    );
 
     return {
       city,
 
       data,
 
-      categories: categories.map((item) => item.category).filter(Boolean),
+      categories: categories
+        .map((item) => item.category)
+        .filter(Boolean),
 
       subtypes: subtypes
         .filter((item) => item.subtype)
@@ -309,21 +428,34 @@ export class CitiesService {
         total,
         limit,
         offset,
-        hasMore: offset + places.length < total,
-        currentPage: Math.floor(offset / limit) + 1,
-        totalPages: Math.ceil(total / limit),
+        hasMore:
+          offset + places.length < total,
+        currentPage:
+          Math.floor(offset / limit) + 1,
+        totalPages: Math.ceil(
+          total / limit,
+        ),
       },
 
       filters: {
-        category: filters.category ?? null,
-        subtype: filters.subtype ?? null,
-        search: filters.search?.trim() || null,
+        category:
+          filters.category ?? null,
+
+        subtype:
+          filters.subtype ?? null,
+
+        search:
+          filters.search?.trim() || null,
+
         sort,
       },
     };
   }
 
-  async updateCity(id: string, data: UpdateCityDto) {
+  async updateCity(
+    id: string,
+    data: UpdateCityDto,
+  ) {
     return this.prisma.city.update({
       where: {
         id,

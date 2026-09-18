@@ -54,7 +54,21 @@ export type Review = {
   };
 };
 
-export type RatingSummary = { average: number; count: number };
+export type RatingSummary = {
+  average: number;
+  count: number;
+};
+
+export type PlaceImage = {
+  id: string;
+  url?: string;
+  imageUrl?: string;
+  source?: string | null;
+  sourceUrl?: string | null;
+  license?: string | null;
+  author?: string | null;
+  attribution?: string | null;
+};
 
 export type PlaceSummary = {
   id: string;
@@ -70,6 +84,7 @@ export type PlaceSummary = {
   createdAt: string;
   updatedAt: string;
   cityVerseScore?: number;
+  images?: PlaceImage[];
   city: {
     id: string;
     name: string;
@@ -80,7 +95,7 @@ export type PlaceSummary = {
 
 export type SavedPlace = {
   id: string;
-  place: PlaceSummary & { images?: Array<{ id: string; url?: string; imageUrl?: string }> };
+  place: PlaceSummary;
 };
 
 export type PlacesResponse = {
@@ -92,10 +107,19 @@ export type PlacesResponse = {
 };
 
 export type CityPlacesResponse = {
-  city: Pick<CitySummary, "id" | "name" | "timezone"> & { latitude: string; longitude: string };
+  city: Pick<
+    CitySummary,
+    "id" | "name" | "timezone"
+  > & {
+    latitude: string;
+    longitude: string;
+  };
   data: PlaceSummary[];
   categories: string[];
-  subtypes: Array<{ category: string; value: string }>;
+  subtypes: Array<{
+    category: string;
+    value: string;
+  }>;
   pagination: {
     total: number;
     limit: number;
@@ -112,22 +136,120 @@ export type CityPlacesResponse = {
   };
 };
 
-export type MapPlace = { id: string; name: string; category: string; subtype: string | null; latitude: string; longitude: string };
-export type MapPlacesResponse = { city: { id: string; name: string; latitude: string; longitude: string }; data: MapPlace[]; limit: number; truncated: boolean };
+export type MapPlace = {
+  id: string;
+  name: string;
+  category: string;
+  subtype: string | null;
+  latitude: string;
+  longitude: string;
+};
 
-export type IntelligenceState = { city: { id: string; name: string; country: string; latitude: string; longitude: string; timezone: string }; generatedAt: string; capabilities: Record<string, "available" | "limited" | "unavailable">; signals: Array<{ type: string; availability: "available" | "limited" | "unavailable"; value: unknown; observedAt?: string; source?: string; freshness?: string; reason?: string }>; layers: Array<{ id: string; label: string; availability: "available" | "limited" | "unavailable"; source?: string; reason?: string }>; predictions?: { available: boolean; statuses: Record<string, string>; reason: string } };
+export type MapPlacesResponse = {
+  city: {
+    id: string;
+    name: string;
+    latitude: string;
+    longitude: string;
+  };
+  data: MapPlace[];
+  limit: number;
+  truncated: boolean;
+};
 
-export async function getDigitalTwin(cityId: string): Promise<IntelligenceState> {
-  const res = await fetch(`${API_URL}/cities/${encodeURIComponent(cityId)}/digital-twin`, { cache: "no-store" });
-  if (!res.ok) throw new Error("Digital Twin unavailable");
+export type IntelligenceState = {
+  city: {
+    id: string;
+    name: string;
+    country: string;
+    latitude: string;
+    longitude: string;
+    timezone: string;
+  };
+  generatedAt: string;
+  capabilities: Record<
+    string,
+    "available" | "limited" | "unavailable"
+  >;
+  signals: Array<{
+    type: string;
+    availability:
+      | "available"
+      | "limited"
+      | "unavailable";
+    value: unknown;
+    observedAt?: string;
+    source?: string;
+    freshness?: string;
+    reason?: string;
+  }>;
+  layers: Array<{
+    id: string;
+    label: string;
+    availability:
+      | "available"
+      | "limited"
+      | "unavailable";
+    source?: string;
+    reason?: string;
+  }>;
+  predictions?: {
+    available: boolean;
+    statuses: Record<string, string>;
+    reason: string;
+  };
+};
+
+export async function getDigitalTwin(
+  cityId: string,
+): Promise<IntelligenceState> {
+  const res = await fetch(
+    `${API_URL}/cities/${encodeURIComponent(cityId)}/digital-twin`,
+    {
+      cache: "no-store",
+    },
+  );
+
+  if (!res.ok) {
+    throw new Error("Digital Twin unavailable");
+  }
+
   return res.json();
 }
 
-export async function getMapPlaces(cityId: string, bounds: { north: number; south: number; east: number; west: number; category?: string }): Promise<MapPlacesResponse> {
-  const params = new URLSearchParams({ north: String(bounds.north), south: String(bounds.south), east: String(bounds.east), west: String(bounds.west), limit: "300" });
-  if (bounds.category) params.set("category", bounds.category);
-  const res = await fetch(`${API_URL}/cities/${cityId}/map/places?${params}`, { cache: "no-store" });
-  if (!res.ok) throw new Error("Failed to load map places");
+export async function getMapPlaces(
+  cityId: string,
+  bounds: {
+    north: number;
+    south: number;
+    east: number;
+    west: number;
+    category?: string;
+  },
+): Promise<MapPlacesResponse> {
+  const params = new URLSearchParams({
+    north: String(bounds.north),
+    south: String(bounds.south),
+    east: String(bounds.east),
+    west: String(bounds.west),
+    limit: "300",
+  });
+
+  if (bounds.category) {
+    params.set("category", bounds.category);
+  }
+
+  const res = await fetch(
+    `${API_URL}/cities/${cityId}/map/places?${params}`,
+    {
+      cache: "no-store",
+    },
+  );
+
+  if (!res.ok) {
+    throw new Error("Failed to load map places");
+  }
+
   return res.json();
 }
 
@@ -149,8 +271,9 @@ export async function getCities(
   return res.json();
 }
 
-
-export async function getFeaturedCities(): Promise<FeaturedCity[]> {
+export async function getFeaturedCities(): Promise<
+  FeaturedCity[]
+> {
   const res = await fetch(
     `${API_URL}/cities/featured`,
     {
@@ -159,14 +282,11 @@ export async function getFeaturedCities(): Promise<FeaturedCity[]> {
   );
 
   if (!res.ok) {
-    throw new Error(
-      "Failed to fetch featured cities",
-    );
+    throw new Error("Failed to fetch featured cities");
   }
 
   return res.json();
 }
-
 
 export async function getCity(id: string) {
   const res = await fetch(`${API_URL}/cities/${id}`, {
@@ -191,7 +311,10 @@ export async function getCityPlaces(
     limit: String(limit),
   });
 
-  params.set("offset", String(Math.max(0, (page - 1) * limit)));
+  params.set(
+    "offset",
+    String(Math.max(0, (page - 1) * limit)),
+  );
 
   Object.entries(query).forEach(([key, value]) => {
     if (value?.trim()) {
@@ -201,7 +324,9 @@ export async function getCityPlaces(
 
   const res = await fetch(
     `${API_URL}/cities/${id}/places?${params.toString()}`,
-    { cache: "no-store" },
+    {
+      cache: "no-store",
+    },
   );
 
   if (!res.ok) {
@@ -210,7 +335,6 @@ export async function getCityPlaces(
 
   return res.json();
 }
-
 
 export type PlacesQuery = {
   city?: string;
@@ -251,10 +375,16 @@ export async function getPlaces(
 }
 
 export async function getPlaceFilters(city?: string) {
-  const params = city ? `?city=${encodeURIComponent(city)}` : "";
-  const res = await fetch(`${API_URL}/places/filters${params}`, {
-    cache: "no-store",
-  });
+  const params = city
+    ? `?city=${encodeURIComponent(city)}`
+    : "";
+
+  const res = await fetch(
+    `${API_URL}/places/filters${params}`,
+    {
+      cache: "no-store",
+    },
+  );
 
   if (!res.ok) {
     throw new Error("Failed to fetch place filters");
@@ -262,10 +392,12 @@ export async function getPlaceFilters(city?: string) {
 
   return res.json() as Promise<{
     categories: string[];
-    subtypes: Array<{ category: string; value: string }>;
+    subtypes: Array<{
+      category: string;
+      value: string;
+    }>;
   }>;
 }
-
 
 export async function getPlace(id: string) {
   const res = await fetch(`${API_URL}/places/${id}`, {
@@ -278,7 +410,6 @@ export async function getPlace(id: string) {
 
   return res.json();
 }
-
 
 export async function getReviews(
   placeId: string,
@@ -297,20 +428,20 @@ export async function getReviews(
   return res.json();
 }
 
-
 export async function createReview(data: {
   rating: number;
   comment: string;
   placeId: string;
 }): Promise<Review> {
-
   const token =
     typeof window !== "undefined"
       ? localStorage.getItem("cityverse_token")
       : null;
 
   if (!token) {
-    throw new Error("Please login before writing a review");
+    throw new Error(
+      "Please login before writing a review",
+    );
   }
 
   const res = await fetch(
@@ -327,6 +458,7 @@ export async function createReview(data: {
 
   if (!res.ok) {
     const error = await res.json().catch(() => null);
+
     throw new Error(
       error?.message || "Failed to create review",
     );
@@ -335,68 +467,219 @@ export async function createReview(data: {
   return res.json();
 }
 
-async function authorizedRequest(path: string, init: RequestInit = {}) {
-  const token = typeof window !== "undefined" ? localStorage.getItem("cityverse_token") : null;
-  if (!token) throw new Error("Please login first");
+async function authorizedRequest(
+  path: string,
+  init: RequestInit = {},
+) {
+  const token =
+    typeof window !== "undefined"
+      ? localStorage.getItem("cityverse_token")
+      : null;
+
+  if (!token) {
+    throw new Error("Please login first");
+  }
+
   const headers = new Headers(init.headers);
-  headers.set("Authorization", `Bearer ${token}`);
-  if (init.body) headers.set("Content-Type", "application/json");
-  return fetch(`${API_URL}${path}`, { ...init, headers });
+
+  headers.set(
+    "Authorization",
+    `Bearer ${token}`,
+  );
+
+  if (init.body) {
+    headers.set(
+      "Content-Type",
+      "application/json",
+    );
+  }
+
+  return fetch(`${API_URL}${path}`, {
+    ...init,
+    headers,
+  });
 }
 
-export async function updateProfile(data: { name: string }): Promise<User> {
-  const res = await authorizedRequest("/auth/me", { method: "PATCH", body: JSON.stringify(data) });
-  if (!res.ok) throw new Error((await res.json().catch(() => null))?.message || "Unable to update profile");
+export async function updateProfile(data: {
+  name: string;
+}): Promise<User> {
+  const res = await authorizedRequest(
+    "/auth/me",
+    {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    },
+  );
+
+  if (!res.ok) {
+    throw new Error(
+      (
+        await res.json().catch(() => null)
+      )?.message ||
+        "Unable to update profile",
+    );
+  }
+
   return res.json();
 }
 
-export async function getRatingSummary(placeId: string): Promise<RatingSummary> {
-  const res = await fetch(`${API_URL}/ratings/${placeId}`, { cache: "no-store" });
-  if (!res.ok) throw new Error("Failed to fetch ratings");
+export async function getRatingSummary(
+  placeId: string,
+): Promise<RatingSummary> {
+  const res = await fetch(
+    `${API_URL}/ratings/${placeId}`,
+    {
+      cache: "no-store",
+    },
+  );
+
+  if (!res.ok) {
+    throw new Error("Failed to fetch ratings");
+  }
+
   return res.json();
 }
 
-export async function ratePlace(placeId: string, rating: number): Promise<RatingSummary> {
-  const res = await authorizedRequest("/ratings", { method: "POST", body: JSON.stringify({ placeId, rating }) });
-  if (!res.ok) throw new Error((await res.json().catch(() => null))?.message || "Failed to save rating");
+export async function ratePlace(
+  placeId: string,
+  rating: number,
+): Promise<RatingSummary> {
+  const res = await authorizedRequest(
+    "/ratings",
+    {
+      method: "POST",
+      body: JSON.stringify({
+        placeId,
+        rating,
+      }),
+    },
+  );
+
+  if (!res.ok) {
+    throw new Error(
+      (
+        await res.json().catch(() => null)
+      )?.message ||
+        "Failed to save rating",
+    );
+  }
+
   return res.json();
 }
 
-export async function updateReview(id: string, data: { rating: number; comment: string; placeId: string }) {
-  const res = await authorizedRequest(`/reviews/${id}`, { method: "PATCH", body: JSON.stringify(data) });
-  if (!res.ok) throw new Error((await res.json().catch(() => null))?.message || "Failed to update review");
+export async function updateReview(
+  id: string,
+  data: {
+    rating: number;
+    comment: string;
+    placeId: string;
+  },
+) {
+  const res = await authorizedRequest(
+    `/reviews/${id}`,
+    {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    },
+  );
+
+  if (!res.ok) {
+    throw new Error(
+      (
+        await res.json().catch(() => null)
+      )?.message ||
+        "Failed to update review",
+    );
+  }
+
   return res.json() as Promise<Review>;
 }
 
 export async function deleteReview(id: string) {
-  const res = await authorizedRequest(`/reviews/${id}`, { method: "DELETE" });
-  if (!res.ok) throw new Error((await res.json().catch(() => null))?.message || "Failed to delete review");
+  const res = await authorizedRequest(
+    `/reviews/${id}`,
+    {
+      method: "DELETE",
+    },
+  );
+
+  if (!res.ok) {
+    throw new Error(
+      (
+        await res.json().catch(() => null)
+      )?.message ||
+        "Failed to delete review",
+    );
+  }
 }
 
-export async function getSavedPlaces(): Promise<SavedPlace[]> {
-  const res = await authorizedRequest("/saved-places", { cache: "no-store" });
-  if (!res.ok) throw new Error((await res.json().catch(() => null))?.message || "Failed to load saved places");
+export async function getSavedPlaces(): Promise<
+  SavedPlace[]
+> {
+  const res = await authorizedRequest(
+    "/saved-places",
+    {
+      cache: "no-store",
+    },
+  );
+
+  if (!res.ok) {
+    throw new Error(
+      (
+        await res.json().catch(() => null)
+      )?.message ||
+        "Failed to load saved places",
+    );
+  }
+
   return res.json();
 }
 
 export async function savePlace(placeId: string) {
-  const res = await authorizedRequest(`/saved-places/${encodeURIComponent(placeId)}`, { method: "POST" });
-  if (!res.ok) throw new Error((await res.json().catch(() => null))?.message || "Failed to save place");
+  const res = await authorizedRequest(
+    `/saved-places/${encodeURIComponent(placeId)}`,
+    {
+      method: "POST",
+    },
+  );
+
+  if (!res.ok) {
+    throw new Error(
+      (
+        await res.json().catch(() => null)
+      )?.message ||
+        "Failed to save place",
+    );
+  }
+
   return res.json();
 }
 
-export async function removeSavedPlace(placeId: string) {
-  const res = await authorizedRequest(`/saved-places/${encodeURIComponent(placeId)}`, { method: "DELETE" });
-  if (!res.ok) throw new Error((await res.json().catch(() => null))?.message || "Failed to remove saved place");
-}
+export async function removeSavedPlace(
+  placeId: string,
+) {
+  const res = await authorizedRequest(
+    `/saved-places/${encodeURIComponent(placeId)}`,
+    {
+      method: "DELETE",
+    },
+  );
 
+  if (!res.ok) {
+    throw new Error(
+      (
+        await res.json().catch(() => null)
+      )?.message ||
+        "Failed to remove saved place",
+    );
+  }
+}
 
 export async function registerUser(data: {
   name: string;
   email: string;
   password: string;
 }): Promise<RegisterResponse> {
-
   const res = await fetch(
     `${API_URL}/auth/register`,
     {
@@ -410,6 +693,7 @@ export async function registerUser(data: {
 
   if (!res.ok) {
     const error = await res.json().catch(() => null);
+
     throw new Error(
       error?.message || "Registration failed",
     );
@@ -418,12 +702,10 @@ export async function registerUser(data: {
   return res.json();
 }
 
-
 export async function loginUser(
   email: string,
   password: string,
 ): Promise<LoginResponse> {
-
   const res = await fetch(
     `${API_URL}/auth/login`,
     {
@@ -440,8 +722,10 @@ export async function loginUser(
 
   if (!res.ok) {
     const error = await res.json().catch(() => null);
+
     throw new Error(
-      error?.message || "Invalid email or password",
+      error?.message ||
+        "Invalid email or password",
     );
   }
 
@@ -453,11 +737,40 @@ export type AssistantResponse = {
   intent: string;
   conversationId?: string;
   cityId?: string;
-  details?: { name?: string; category?: string; subtype?: string | null; address?: string | null; website?: string | null; phone?: string | null; openingHours?: string | null; cuisine?: string | null; cityVerseScore?: number; reviewCount?: number; averageRating?: number | null };
-  places: Array<{ placeId: string; name?: string; category?: string; subtype?: string | null; cityVerseScore?: number; reviewCount?: number; reason: string }>;
-  weather: { available?: boolean; current?: { temperatureC: number; condition: string } } | null;
+  details?: {
+    name?: string;
+    category?: string;
+    subtype?: string | null;
+    address?: string | null;
+    website?: string | null;
+    phone?: string | null;
+    openingHours?: string | null;
+    cuisine?: string | null;
+    cityVerseScore?: number;
+    reviewCount?: number;
+    averageRating?: number | null;
+  };
+  places: Array<{
+    placeId: string;
+    name?: string;
+    category?: string;
+    subtype?: string | null;
+    cityVerseScore?: number;
+    reviewCount?: number;
+    reason: string;
+  }>;
+  weather: {
+    available?: boolean;
+    current?: {
+      temperatureC: number;
+      condition: string;
+    };
+  } | null;
   route: unknown | null;
-  alerts: Array<{ title?: string; description?: string }>;
+  alerts: Array<{
+    title?: string;
+    description?: string;
+  }>;
   alertsAvailable?: boolean;
   alertsReason?: string;
   suggestions: string[];
@@ -465,31 +778,225 @@ export type AssistantResponse = {
   unavailable?: boolean;
 };
 
-export async function askAssistant(data: { message: string; conversationId?: string; cityId?: string; placeId?: string; latitude?: number; longitude?: number; origin?: { latitude: number; longitude: number }; destination?: { latitude: number; longitude: number }; history?: Array<{ role: "user" | "assistant"; content: string }> }): Promise<AssistantResponse> {
-  const res = await fetch(`${API_URL}/assistant`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });
-  if (!res.ok) throw new Error((await res.json().catch(() => null))?.message || "Assistant unavailable");
+export async function askAssistant(data: {
+  message: string;
+  conversationId?: string;
+  cityId?: string;
+  placeId?: string;
+  latitude?: number;
+  longitude?: number;
+  origin?: {
+    latitude: number;
+    longitude: number;
+  };
+  destination?: {
+    latitude: number;
+    longitude: number;
+  };
+  history?: Array<{
+    role: "user" | "assistant";
+    content: string;
+  }>;
+}): Promise<AssistantResponse> {
+  const res = await fetch(
+    `${API_URL}/assistant`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    },
+  );
+
+  if (!res.ok) {
+    throw new Error(
+      (
+        await res.json().catch(() => null)
+      )?.message ||
+        "Assistant unavailable",
+    );
+  }
+
   return res.json();
 }
 
-export type RecommendationResponse = { mode: string; personalized: boolean; message: string; recommendations: Array<{ placeId: string; rank: number; score: number; reason: string }> };
+export type RecommendationResponse = {
+  mode: string;
+  personalized: boolean;
+  message: string;
+  recommendations: Array<{
+    placeId: string;
+    rank: number;
+    score: number;
+    reason: string;
+  }>;
+};
 
-export async function getCityRecommendations(cityId: string, limit = 6): Promise<RecommendationResponse> {
-  const res = await fetch(`${API_URL}/recommendations/cities/${encodeURIComponent(cityId)}?limit=${limit}`, { cache: "no-store" });
-  if (!res.ok) throw new Error("Recommendations unavailable");
+export async function getCityRecommendations(
+  cityId: string,
+  limit = 6,
+): Promise<RecommendationResponse> {
+  const res = await fetch(
+    `${API_URL}/recommendations/cities/${encodeURIComponent(
+      cityId,
+    )}?limit=${limit}`,
+    {
+      cache: "no-store",
+    },
+  );
+
+  if (!res.ok) {
+    throw new Error(
+      "Recommendations unavailable",
+    );
+  }
+
   return res.json();
 }
 
-export type DashboardOverview = { totals: { cities: number; places: number; users: number; reviews: number; ratings: number; savedPlaces: number; images: number }; categories: Array<{ category: string; count: number }>; cities: Array<{ id: string; name: string; country: string; timezone: string; placeCount: number }>; scoreStats: { available: number; average: number | null; median: number | null; distribution: Array<{ range: string; count: number }> }; userActivity: { users: number; ratings: number; reviews: number; savedPlaces: number } };
-export type CityDashboard = { city: { id: string; name: string; country: string; timezone: string; latitude: string; longitude: string }; totalPlaces: number; categories: Array<{ category: string; count: number; percentage: number }>; subtypes: Array<{ category: string; subtype: string | null; count: number }>; scoreStats: DashboardOverview["scoreStats"]; quality: Record<string, { count: number; percentage: number }>; ratings: { count: number; average: number | null; reviewCount: number }; geography: { _min: { latitude: string | null; longitude: string | null }; _max: { latitude: string | null; longitude: string | null }; _avg: { latitude: string | null; longitude: string | null } }; topPlaces: { byCityVerseScore: Array<{ placeId: string; score: number; place: { name: string; category: string; subtype: string | null } }> }; capabilities: Record<string, boolean | string> };
+export type DashboardOverview = {
+  totals: {
+    cities: number;
+    places: number;
+    users: number;
+    reviews: number;
+    ratings: number;
+    savedPlaces: number;
+    images: number;
+  };
+  categories: Array<{
+    category: string;
+    count: number;
+  }>;
+  cities: Array<{
+    id: string;
+    name: string;
+    country: string;
+    timezone: string;
+    placeCount: number;
+  }>;
+  scoreStats: {
+    available: number;
+    average: number | null;
+    median: number | null;
+    distribution: Array<{
+      range: string;
+      count: number;
+    }>;
+  };
+  userActivity: {
+    users: number;
+    ratings: number;
+    reviews: number;
+    savedPlaces: number;
+  };
+};
+
+export type CityDashboard = {
+  city: {
+    id: string;
+    name: string;
+    country: string;
+    timezone: string;
+    latitude: string;
+    longitude: string;
+  };
+  totalPlaces: number;
+  categories: Array<{
+    category: string;
+    count: number;
+    percentage: number;
+  }>;
+  subtypes: Array<{
+    category: string;
+    subtype: string | null;
+    count: number;
+  }>;
+  scoreStats: DashboardOverview["scoreStats"];
+  quality: Record<
+    string,
+    {
+      count: number;
+      percentage: number;
+    }
+  >;
+  ratings: {
+    count: number;
+    average: number | null;
+    reviewCount: number;
+  };
+  geography: {
+    _min: {
+      latitude: string | null;
+      longitude: string | null;
+    };
+    _max: {
+      latitude: string | null;
+      longitude: string | null;
+    };
+    _avg: {
+      latitude: string | null;
+      longitude: string | null;
+    };
+  };
+  topPlaces: {
+    byCityVerseScore: Array<{
+      placeId: string;
+      score: number;
+      place: {
+        name: string;
+        category: string;
+        subtype: string | null;
+      };
+    }>;
+  };
+  capabilities: Record<
+    string,
+    boolean | string
+  >;
+};
 
 export async function getDashboardOverview(): Promise<DashboardOverview> {
-  const res = await authorizedRequest("/dashboard/overview", { cache: "no-store" });
-  if (!res.ok) throw new Error((await res.json().catch(() => null))?.message || "Dashboard unavailable");
+  const res = await authorizedRequest(
+    "/dashboard/overview",
+    {
+      cache: "no-store",
+    },
+  );
+
+  if (!res.ok) {
+    throw new Error(
+      (
+        await res.json().catch(() => null)
+      )?.message ||
+        "Dashboard unavailable",
+    );
+  }
+
   return res.json();
 }
 
-export async function getCityDashboard(cityId: string): Promise<CityDashboard> {
-  const res = await authorizedRequest(`/dashboard/cities/${encodeURIComponent(cityId)}`, { cache: "no-store" });
-  if (!res.ok) throw new Error((await res.json().catch(() => null))?.message || "City dashboard unavailable");
+export async function getCityDashboard(
+  cityId: string,
+): Promise<CityDashboard> {
+  const res = await authorizedRequest(
+    `/dashboard/cities/${encodeURIComponent(
+      cityId,
+    )}`,
+    {
+      cache: "no-store",
+    },
+  );
+
+  if (!res.ok) {
+    throw new Error(
+      (
+        await res.json().catch(() => null)
+      )?.message ||
+        "City dashboard unavailable",
+    );
+  }
+
   return res.json();
 }

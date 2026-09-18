@@ -3,6 +3,8 @@ import { Prisma } from '../../generated/prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreatePlaceDto } from './dto/create-place.dto';
 import { calculateCityVerseScore } from './cityverse-score';
+import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 const DEFAULT_PAGE = 1;
 const DEFAULT_LIMIT = 24;
@@ -64,6 +66,48 @@ export type GetPlacesOptions = {
 
 @Injectable()
 export class PlacesService {
+  private readonly r2Client = new S3Client({
+    region: 'auto',
+    endpoint: process.env.R2_ENDPOINT!,
+    credentials: {
+      accessKeyId: process.env.R2_ACCESS_KEY_ID!,
+      secretAccessKey: process.env.R2_SECRET_ACCESS_KEY!,
+    },
+  });
+
+  private async signPlaceImages(images: Array<{ url: string; [key: string]: any }>) {
+    return Promise.all(
+      images.map(async (image) => {
+        if (image.source !== 'mapillary' || !image.url) {
+          return image;
+        }
+
+        const marker = '/places/';
+        const markerIndex = image.url.indexOf(marker);
+
+        if (markerIndex === -1) {
+          return image;
+        }
+
+        const key = image.url.slice(markerIndex + 1);
+
+        const signedUrl = await getSignedUrl(
+          this.r2Client,
+          new GetObjectCommand({
+            Bucket: process.env.R2_BUCKET_NAME!,
+            Key: key,
+          }),
+          { expiresIn: 3600 },
+        );
+
+        return {
+          ...image,
+          url: signedUrl,
+        };
+      }),
+    );
+  }
+
   constructor(
     private readonly prisma: PrismaService,
   ) {}
@@ -173,6 +217,7 @@ export class PlacesService {
           cityId: true,
           createdAt: true,
           updatedAt: true,
+          images: true,
           city: {
             select: {
               id: true,
@@ -199,12 +244,15 @@ export class PlacesService {
     const totalPages = Math.max(1, Math.ceil(total / safeLimit));
 
     return {
-      data: rankedPlaces.map((place) => ({
-        ...place,
-        cityVerseScore: Number(calculateCityVerseScore(place).toFixed(1)),
-        reviewsCount: place._count.reviews,
-        _count: undefined,
-      })),
+      data: await Promise.all(
+        rankedPlaces.map(async (place) => ({
+          ...place,
+          images: await this.signPlaceImages(place.images),
+          cityVerseScore: Number(calculateCityVerseScore(place).toFixed(1)),
+          reviewsCount: place._count.reviews,
+          _count: undefined,
+        })),
+      ),
       page: safePage,
       limit: safeLimit,
       total,
@@ -330,7 +378,7 @@ export class PlacesService {
       updatedAt: place.updatedAt,
 
       city: place.city,
-      images: place.images,
+      images: await this.signPlaceImages(place.images),
       reviews: place.reviews,
 
       reviewsCount,
